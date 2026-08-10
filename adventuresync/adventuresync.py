@@ -10,16 +10,15 @@ _ = Translator("AdventureSync", __file__)
 
 log = logging.getLogger("red.cogs.adventuresync")
 
-# guild_id -> {display name, the #adventure channel to post cross-server
-# notices into, and the invite link people should use to find that server}
+# guild_id -> {the #adventure channel to post cross-server notices into,
+# and the invite link people should use to find that server}. Display names
+# aren't hardcoded here - we always pull the live guild.name at dispatch time.
 LINKED_GUILDS = {
     312367941578653696: {  # OJ
-        "name": "OJ",
         "channel_id": 589503429173444619,
         "invite": "https://discord.gg/oj",
     },
     420336618260529169: {  # OJF
-        "name": "OJF",
         "channel_id": 688831526141558837,
         "invite": "https://discord.gg/ojg",
     },
@@ -93,16 +92,35 @@ class AdventureSync(commands.Cog):
         except AttributeError:
             colour = await session.ctx.embed_color()
 
-        embed = discord.Embed(
-            description=_(
-                "Feeling adventurous? A group over on **{guild}** just set off on an "
-                "adventure of their own. Come join [their adventure]({jump_url})!\n{jump_url}"
-            ).format(guild=source_info["name"], jump_url=jump_url),
-            colour=colour,
-        )
+        monster_name = None
+        if getattr(session, "easy_mode", False):
+            attribute = getattr(session, "attribute", "") or ""
+            challenge = getattr(session, "challenge", None)
+            if challenge:
+                monster_name = _("a{attribute} {challenge}").format(attribute=attribute, challenge=challenge)
+
+        if monster_name:
+            description = _(
+                "Feeling adventurous? A group in **{guild}** just kicked off an adventure "
+                "of their own against **{monster}**. Come join [their adventure]({jump_url}) "
+                "at {jump_url}"
+            ).format(guild=guild.name, monster=monster_name, jump_url=jump_url)
+        else:
+            description = _(
+                "Feeling adventurous? A group in **{guild}** just kicked off an adventure "
+                "of their own. Come join [their adventure]({jump_url}) at {jump_url}"
+            ).format(guild=guild.name, jump_url=jump_url)
+
+        embed = discord.Embed(description=description, colour=colour)
         embed.add_field(
             name=_("Link to the Server"),
-            value=f"[{source_info['name']}]({source_info['invite']})",
+            value=f"[{guild.name}]({source_info['invite']})",
             inline=False,
         )
+
+        if getattr(session, "easy_mode", False):
+            monster = getattr(session, "monster", None)
+            if monster and monster.get("image"):
+                embed.set_thumbnail(url=monster["image"])
+
         await target_channel.send(embed=embed)
