@@ -572,18 +572,34 @@ class ClassAbilities(AdventureMixin):
                 c.heroclass["cooldown"] = time.time() + cooldown_time
                 async with self.get_lock(c.user):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                    if good:
+                    textroll = random.randint(1, 6)
+                if good:
+                    if textroll == 1 or textroll == 4:
                         await smart_embed(
                             ctx,
-                            _("{skill} {c} is focusing on the monster ahead...{skill}").format(
+                            _("{skill} {c} j wnf vxk vxmrorna rb jkxdc... fqjc lxdum rc vnjw?{skill}").format(
+                                c=bold(ctx.author.display_name),
+                                skill=self.emojis.skills.berserker,
+                            ),
+                        )
+                    elif textroll == 2 or textroll == 5:
+                        await smart_embed(
+                            ctx,
+                            _("{skill} {c} rb oxldbrwp xw cqn vxwbcna jqnjm...{skill}").format(
+                                c=bold(ctx.author.display_name),
+                                skill=self.emojis.skills.berserker,
+                            ),
+                        )
+                    elif textroll == 3 or textroll == 6:
+                        await smart_embed(
+                            ctx,
+                            _("{skill} {c} anenju rc frcqrw jw rwbrpqc cx yaxlnnm...{skill}").format(
                                 c=bold(ctx.author.display_name),
                                 skill=self.emojis.skills.psychic,
                             ),
                         )
-                session = self._sessions[ctx.guild.id]
-                was_exposed = not session.exposed
-                if good:
-
+                    session = self._sessions[ctx.guild.id]
+                    was_exposed = not session.exposed
                     if roll <= 0.4:
                         return await smart_embed(ctx, _("You suck."))
                     msg = ""
@@ -599,14 +615,14 @@ class ClassAbilities(AdventureMixin):
                         choice = random.choice(["physical", "magic", "diplomacy"])
                         if choice == "physical":
                             physical_roll = 0.4
-                            magic_roll = 0.6
-                            diplo_roll = 0.8
+                            magic_roll = 0.8
+                            diplo_roll = 0.6
                         elif choice == "magic":
                             physical_roll = 0.8
                             magic_roll = 0.4
                             diplo_roll = 0.6
                         else:
-                            physical_roll = 0.8
+                            physical_roll = 0.6
                             magic_roll = 0.6
                             diplo_roll = 0.4
 
@@ -663,8 +679,14 @@ class ClassAbilities(AdventureMixin):
                             self._sessions[ctx.guild.id].exposed = True
 
                         if roll >= physical_roll:
-                            if pdef >= 1.5:
-                                msg += _("Swords bounce off this monster as it's skin is **almost impenetrable!**\n")
+                            if pdef >= 2.0:
+                                msg += _(
+                                    "This monster's armour is **impossible to penetrate** that every sword in existence is pretty much useless!\n"
+                                )
+                            elif pdef >= 1.75:
+                                msg += _("This monster's armour is **near-unbreakable**, even the sharpest sword barely scratches it!\n")
+                            elif pdef >= 1.5:
+                                msg += _("Swords bounce off this monster as its skin is **almost impenetrable!**\n")
                             elif pdef >= 1.25:
                                 msg += _("This monster has **extremely tough** armour!\n")
                             elif pdef > 1:
@@ -674,7 +696,11 @@ class ClassAbilities(AdventureMixin):
                             else:
                                 msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
                         if roll >= magic_roll:
-                            if mdef >= 1.5:
+                            if mdef >= 2.0:
+                                msg += _("Magic has **zero effect** against this creature's overwhelming resistance!\n")
+                            elif mdef >= 1.75:
+                                msg += _("This monster's staggering magic resistance **nullifies most spells**!\n")
+                            elif mdef >= 1.5:
                                 msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
                             elif mdef >= 1.25:
                                 msg += _("This monster has **substantial magic resistance!**\n")
@@ -685,7 +711,11 @@ class ClassAbilities(AdventureMixin):
                             else:
                                 msg += _("Magic spells are **hugely effective** against this monster!\n")
                         if roll >= diplo_roll:
-                            if cdef >= 1.5:
+                            if cdef >= 2.0:
+                                msg += _("This creature is **utterly deaf** to your puny diplomacy!\n")
+                            elif cdef >= 1.75:
+                                msg += _("This creature's **overwhelming defiance** makes diplomacy nearly hopeless!\n")
+                            elif cdef >= 1.5:
                                 msg += _(
                                     "You think you are charismatic? Pfft, this creature **couldn't care less** for what you want to say!\n"
                                 )

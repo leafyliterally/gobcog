@@ -924,13 +924,13 @@ class Adventure(
                 new_challenge = _("Transcended {}").format(challenge.replace("Ascended ", ""))
             no_monster = False
             if monster_roster[challenge]["boss"]:
-                timer = 60 * 5
+                timer = 60 * 3
                 challenge_str = _("[{challenge} Alarm!]").format(challenge=new_challenge)
                 text = box(ANSITextColours.red.as_str(challenge_str), lang="ansi")
             elif monster_roster[challenge]["miniboss"]:
                 timer = 60 * 3
             else:
-                timer = 60 * 2
+                timer = 60 * 3
         else:
             if transcended:
                 # Hide Transcended on Easy mode
@@ -1013,7 +1013,7 @@ class Adventure(
                 "but **a{attr} {chall}** "
                 "just landed in front of you glaring! \n\n"
                 "What will you do and will other heroes be brave enough to help you?\n"
-                "Heroes have 5 minutes to participate."
+                "Heroes have 3 minutes to participate."
             ).format(
                 attr=session.attribute,
                 chall=session.challenge,
@@ -1030,7 +1030,7 @@ class Adventure(
                 "but **a{attr} {chall}** "
                 "is guarding it with{threat}. \n\n"
                 "What will you do and will other heroes help your cause?\n"
-                "Heroes have 2 minutes to participate."
+                "Heroes have 3 minutes to participate."
             ).format(
                 attr=session.attribute,
                 chall=session.challenge,
@@ -1045,7 +1045,7 @@ class Adventure(
                     adventure_msg = await ctx.send(embed=embed, view=session)
                 else:
                     adventure_msg = await ctx.send(f"{adventure_msg}\n{dragon_text}", view=session)
-                timeout = 60 * 5
+                timeout = 60 * 3
 
             elif session.miniboss:
                 if use_embeds:
@@ -1065,7 +1065,7 @@ class Adventure(
                     adventure_msg = await ctx.send(embed=embed, view=session)
                 else:
                     adventure_msg = await ctx.send(f"{adventure_msg}\n{normal_text}", view=session)
-                timeout = 60 * 2
+                timeout = 60 * 3
         else:
             timeout = 60 * 3
             obscured_text = _(
@@ -2252,7 +2252,7 @@ class Adventure(
                     attack += pray_att_bonus
                     magic += pray_magic_bonus
                     diplomacy += pray_diplo_bonus
-                    if roll == 50:
+                    if roll_perc > 0.95:
                         roll_msg = _(
                             "{user} turned into an avatar of mighty {god}. "
                             "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"

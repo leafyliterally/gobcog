@@ -14,3 +14,6 @@ venv/
 !/adventure/data/default/temp.json
 .mypy_cache
 .venv/
+.DS_Store
+**/__pycache__/
+.vscode/

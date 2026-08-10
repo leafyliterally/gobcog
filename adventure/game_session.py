@@ -165,11 +165,23 @@ class SpecialActionButton(discord.ui.Button):
             c.heroclass["cooldown"] = time.time() + cooldown_time
 
             await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+            textroll = self.view.rng.randint(1, 6)
             if good:
-                msg = _("{skill} **{c}** is focusing on the monster ahead...{skill}").format(
-                    c=escape(user.display_name),
-                    skill=self.view.cog.emojis.skills.psychic,
-                )
+                if textroll == 1 or textroll == 4:
+                    msg = _("{skill} **{c}** j wnf vxk vxmrorna rb jkxdc... fqjc lxdum rc vnjw?{skill}").format(
+                        c=escape(user.display_name),
+                        skill=self.view.cog.emojis.skills.berserker,
+                    )
+                elif textroll == 2 or textroll == 5:
+                    msg = _("{skill} **{c}** rb oxldbrwp xw cqn vxwbcna jqnjm...{skill}").format(
+                        c=escape(user.display_name),
+                        skill=self.view.cog.emojis.skills.berserker,
+                    )
+                else:
+                    msg = _("{skill} **{c}** anenju rc frcqrw jw rwbrpqc cx yaxlnnm...{skill}").format(
+                        c=escape(user.display_name),
+                        skill=self.view.cog.emojis.skills.psychic,
+                    )
                 await smart_embed(interaction=interaction, message=msg, cog=self.view.cog)
             if good:
                 session = self.view
@@ -185,7 +197,21 @@ class SpecialActionButton(discord.ui.Button):
                     mdef = session.monster_modified_stats["mdef"]
                     cdef = session.monster_modified_stats.get("cdef", 1.0)
                     hp = session.monster_modified_stats["hp"]
-                    diplo = session.monster_modified_stats["dipl"]
+                    dipl = session.monster_modified_stats["dipl"]
+                    choice = self.view.rng.choice(["physical", "magic", "diplomacy"])
+                    if choice == "physical":
+                        physical_roll = 0.4
+                        magic_roll = 0.8
+                        diplo_roll = 0.6
+                    elif choice == "magic":
+                        physical_roll = 0.8
+                        magic_roll = 0.4
+                        diplo_roll = 0.6
+                    else:
+                        physical_roll = 0.6
+                        magic_roll = 0.6
+                        diplo_roll = 0.4
+
                     if roll == 1:
                         hp = session.monster_hp()
                         dipl = session.monster_dipl()
@@ -237,9 +263,17 @@ class SpecialActionButton(discord.ui.Button):
                             challenge=session.challenge,
                         )
                         self.view.exposed = True
-                    if roll >= 0.4:
-                        if pdef >= 1.5:
-                            msg += _("Swords bounce off this monster as it's skin is **almost impenetrable!**\n")
+                    if roll >= physical_roll:
+                        if pdef >= 2.0:
+                            msg += _(
+                                "This monster's armour is **impossible to penetrate** that every sword in existence is pretty much useless!\n"
+                            )
+                        elif pdef >= 1.75:
+                            msg += _(
+                                "This monster's armour is **near-unbreakable**, even the sharpest sword barely scratches it!\n"
+                            )
+                        elif pdef >= 1.5:
+                            msg += _("Swords bounce off this monster as its skin is **almost impenetrable!**\n")
                         elif pdef >= 1.25:
                             msg += _("This monster has **extremely tough** armour!\n")
                         elif pdef > 1:
@@ -248,8 +282,12 @@ class SpecialActionButton(discord.ui.Button):
                             msg += _("This monster is **soft and easy** to slice!\n")
                         else:
                             msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
-                    if roll >= 0.6:
-                        if mdef >= 1.5:
+                    if roll >= magic_roll:
+                        if mdef >= 2.0:
+                            msg += _("Magic has **zero effect** against this creature's overwhelming resistance!\n")
+                        elif mdef >= 1.75:
+                            msg += _("This monster's staggering magic resistance **nullifies most spells**!\n")
+                        elif mdef >= 1.5:
                             msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
                         elif mdef >= 1.25:
                             msg += _("This monster has **substantial magic resistance!**\n")
@@ -259,10 +297,14 @@ class SpecialActionButton(discord.ui.Button):
                             msg += _("This monster's hide **melts to magic!**\n")
                         else:
                             msg += _("Magic spells are **hugely effective** against this monster!\n")
-                    if roll >= 0.8:
-                        if cdef >= 1.5:
+                    if roll >= diplo_roll:
+                        if cdef >= 2.0:
+                            msg += _("This creature is **utterly deaf** to your puny diplomacy!\n")
+                        elif cdef >= 1.75:
+                            msg += _("This creature's **overwhelming defiance** makes diplomacy nearly hopeless!\n")
+                        elif cdef >= 1.5:
                             msg += _(
-                                "You think you are charismatic? Pfft, this creature couldn't care less for what you want to say!\n"
+                                "You think you are charismatic? Pfft, this creature **couldn't care less** for what you want to say!\n"
                             )
                         elif cdef >= 1.25:
                             msg += _("Any attempts to communicate with this creature will be **very difficult!**\n")
@@ -275,7 +317,7 @@ class SpecialActionButton(discord.ui.Button):
 
                 if msg:
                     image = None
-                    if roll >= 0.4:
+                    if roll >= 0.4 and not session.no_monster:
                         image = session.monster["image"]
                     response_msg = await smart_embed(
                         ctx=None,

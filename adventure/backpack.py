@@ -25,7 +25,7 @@ from .converters import (
     RarityConverter,
     SlotConverter,
 )
-from .helpers import ConfirmView, _sell, escape, is_dev, smart_embed
+from .helpers import ConfirmView, _sell, _title_case, escape, is_dev, smart_embed
 from .menus import BackpackMenu, BackpackSource, BaseMenu, SimpleSource
 
 _ = Translator("Adventure", __file__)
@@ -313,7 +313,8 @@ class BackPackCommands(AdventureMixin):
                 ctx.command.reset_cooldown(ctx)
                 return
 
-            pieces = await character.get_set_count(return_items=True, set_name=set_name.title())
+            set_name = await _title_case(set_name)
+            pieces = await character.get_set_count(return_items=True, set_name=set_name)
             if not pieces:
                 ctx.command.reset_cooldown(ctx)
                 return await smart_embed(
