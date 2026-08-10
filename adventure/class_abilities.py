@@ -622,8 +622,8 @@ class ClassAbilities(AdventureMixin):
                             magic_roll = 0.4
                             diplo_roll = 0.6
                         else:
-                            physical_roll = 0.6
-                            magic_roll = 0.6
+                            physical_roll = 0.7
+                            magic_roll = 0.7
                             diplo_roll = 0.4
 
                         if roll == 1:
