@@ -24,32 +24,6 @@ LINKED_GUILDS = {
 }
 
 
-class _RelayCtx:
-    """Thin proxy around a real ctx, used only to redispatch "adventure"
-    into the linked guild's own event stream.
-
-    Real commands.Context.guild and .channel are read-only properties
-    derived from ctx.message - they can't just be reassigned, and mutating
-    the live ctx in place would be unsafe anyway since _simple() keeps using
-    that same ctx object right after dispatching it. This wraps it instead:
-    `.guild` and `.channel` are overridden to point at the linked guild and
-    its #adventure channel, and every other attribute (`.author`, `.message`,
-    `.bot`, `.embed_color()`, ...) is forwarded straight through to the real
-    ctx via __getattr__, unchanged. Matches the master-branch version of
-    this cog, where _RelaySession overrides the same pair of attributes on
-    the GameSession it relays.
-    """
-
-    def __init__(self, ctx: commands.Context, guild: discord.Guild, channel: discord.abc.Messageable):
-        self._adventuresync_relay = True
-        self._ctx = ctx
-        self.guild = guild
-        self.channel = channel
-
-    def __getattr__(self, item):
-        return getattr(self._ctx, item)
-
-
 @cog_i18n(_)
 class AdventureSync(commands.Cog):
     """Cross-posts adventure spawns between the OJ and OJF servers.
@@ -93,19 +67,7 @@ class AdventureSync(commands.Cog):
            sent yet either - so there's no monster name to show and no
            message to build a jump_url from. We link to the #adventure
            channel itself instead of a specific message.
-
-        Because dispatch happens this early, there's also nothing to mirror
-        from dispatch_adventure()'s later boss/miniboss/etc. sub-dispatches -
-        those haven't been rolled yet either. So the redispatch below only
-        ever fires "adventure" itself, once.
         """
-        if getattr(ctx, "_adventuresync_relay", False):
-            # This is a _RelayCtx we dispatched ourselves further down -
-            # ignore it here, otherwise the two linked guilds would keep
-            # redispatching "adventure" back and forth at each other
-            # forever.
-            return
-
         guild = ctx.guild
         if guild is None or guild.id not in LINKED_GUILDS:
             return
@@ -143,12 +105,3 @@ class AdventureSync(commands.Cog):
         )
 
         await target_channel.send(embed=embed)
-
-        target_guild = self.bot.get_guild(other_guild_id)
-        if target_guild is not None:
-            # Modify the guild *and* channel context - see _RelayCtx - and
-            # redispatch just "adventure" so anything listening in the
-            # linked guild (AdventureAlert, etc.) reacts as if the
-            # adventure had spawned there too.
-            relay_ctx = _RelayCtx(ctx, target_guild, target_channel)
-            self.bot.dispatch("adventure", relay_ctx)
