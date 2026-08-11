@@ -25,42 +25,6 @@ LINKED_GUILDS = {
 }
 
 
-class _RelaySession:
-    """Duck-typed stand-in for a GameSession, aimed at the linked guild.
-
-    Used only when AdventureSync redispatches an adventure into the other
-    guild's own event stream (see AdventureSync._relay_adventure below).
-    Only carries the handful of attributes anything listening for these
-    events actually reads - the same set dispatch_adventure() in
-    adventure.py exposes on the real session: .guild, .channel, .message,
-    .ctx, plus the boss/miniboss/transcended/ascended/immortal/possessed/
-    easy_mode flags used to decide which sub-events to fire.
-
-    `.guild` and `.channel` point at the *linked* guild/channel rather than
-    where the adventure actually spawned - that's the whole point, so that
-    a cog like AdventureAlert installed on the linked guild reacts as if the
-    adventure had spawned there. `.ctx` is carried over from the source
-    session as-is; there's no real Context for the linked guild to hand out
-    (nothing was actually invoked there), so anything that falls back to
-    `.ctx.embed_color()` will get the *source* guild's colour, not the
-    target's - a minor, unavoidable cosmetic tradeoff.
-    """
-
-    def __init__(self, source, guild: discord.Guild, channel: discord.abc.Messageable, message: discord.Message):
-        self._adventuresync_relay = True
-        self.guild = guild
-        self.channel = channel
-        self.message = message
-        self.ctx = getattr(source, "ctx", None)
-        self.easy_mode = getattr(source, "easy_mode", False)
-        self.boss = getattr(source, "boss", False)
-        self.miniboss = getattr(source, "miniboss", False)
-        self.transcended = getattr(source, "transcended", False)
-        self.ascended = getattr(source, "ascended", False)
-        self.immortal = getattr(source, "immortal", False)
-        self.possessed = getattr(source, "possessed", False)
-
-
 @cog_i18n(_)
 class AdventureSync(commands.Cog):
     """Cross-posts adventure spawns between the OJ and OJF servers.
@@ -101,13 +65,6 @@ class AdventureSync(commands.Cog):
         `session.ctx`, so that's what we call embed_color() on instead.
         """
         session = ctx  # this is actually a GameSession - renamed for clarity
-
-        if getattr(session, "_adventuresync_relay", False):
-            # This is a _RelaySession we dispatched ourselves further down -
-            # ignore it here, otherwise the two linked guilds would keep
-            # redispatching "adventure" back and forth at each other forever.
-            return
-
         guild: Optional[discord.Guild] = getattr(session, "guild", None)
         if guild is None or guild.id not in LINKED_GUILDS:
             return
@@ -166,51 +123,4 @@ class AdventureSync(commands.Cog):
             if monster and monster.get("image"):
                 embed.set_thumbnail(url=monster["image"])
 
-        relay_message = await target_channel.send(embed=embed)
-
-        target_guild = self.bot.get_guild(other_guild_id)
-        if target_guild is not None:
-            self._relay_adventure(session, target_guild, target_channel, relay_message)
-
-    def _relay_adventure(
-        self,
-        session,
-        guild: discord.Guild,
-        channel: discord.abc.Messageable,
-        message: discord.Message,
-    ) -> None:
-        """Redispatch the adventure into the linked guild's own event stream.
-
-        Mirrors dispatch_adventure() in adventure.py: builds a duck-typed
-        stand-in for the session (see _RelaySession above) pointed at the
-        linked guild instead of the guild the adventure actually spawned in,
-        then fires the same "adventure"/"adventure_boss"/"adventure_miniboss"/
-        etc. events so any other cog listening in that guild - AdventureAlert,
-        or another AdventureSync-style cog - reacts exactly as if the
-        adventure had spawned there.
-
-        dispatch_adventure() only fires "adventure" `if not was_exposed`,
-        since it can be called a second time for the same session once a
-        boss/miniboss gets revealed mid-adventure. That guard doesn't apply
-        here - the linked guild has never seen this session before, so
-        "adventure" always fires once. The sub-events still only fire when
-        `session.easy_mode`, matching the same easy_mode gate this cog
-        already uses to decide whether the monster is known yet at all.
-        """
-        relay = _RelaySession(session, guild=guild, channel=channel, message=message)
-        self.bot.dispatch("adventure", relay)
-        if relay.easy_mode:
-            if relay.boss:
-                self.bot.dispatch("adventure_boss", relay)
-            elif relay.miniboss:
-                self.bot.dispatch("adventure_miniboss", relay)
-
-            if relay.transcended:
-                self.bot.dispatch("adventure_transcended", relay)
-            elif relay.ascended:
-                self.bot.dispatch("adventure_ascended", relay)
-
-            if relay.immortal:
-                self.bot.dispatch("adventure_immortal", relay)
-            elif relay.possessed:
-                self.bot.dispatch("adventure_possessed", relay)
+        await target_channel.send(embed=embed)
