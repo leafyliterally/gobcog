@@ -1,0 +1,17 @@
+{
+	"author": [
+		"Leafy"
+	],
+	"description": "Cross-posts adventure spawns between the OJ and OJF servers so each community can join the other's runs.",
+	"install_msg": "Thank you for installing AdventureSync. Use `[p]load adventuresync` to get started.",
+	"min_python_version": [3, 8, 1],
+	"min_bot_version": "3.4.0",
+	"name": "AdventureSync",
+	"short": "Cross-server adventure spawn notifications.",
+	"tags": [
+		"adventure",
+		"cross-post"
+	],
+	"type": "COG",
+	"end_user_data_statement": "This cog does not store any user data."
+}
