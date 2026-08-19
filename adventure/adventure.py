@@ -36,7 +36,7 @@ from .defaults import default_global, default_guild, default_user
 from .dev import DevCommands
 from .economy import EconomyCommands
 from .game_session import GameSession
-from .helpers import _get_epoch, _remaining, is_dev, smart_embed
+from .helpers import _get_epoch, _remaining, is_dev, safe_pagify, smart_embed
 from .leaderboards import LeaderboardCommands
 from .loadouts import LoadoutCommands
 from .loot import LootCommands
@@ -1511,7 +1511,7 @@ class Adventure(
                 text=text,
                 run_msg=run_msg,
             )
-            output = pagify(output, page_length=1900)
+            output = safe_pagify(output, page_length=1900)
             await calc_msg.delete()
             for i in output:
                 await smart_embed(ctx, i, success=True)
@@ -1939,7 +1939,7 @@ class Adventure(
             if loss_list:
                 self._loss_message[ctx.message.id] = humanize_list(loss_list).strip()
         output = f"{result_msg}\n{text}"
-        output = pagify(output, delims=["\n", "```"], page_length=1900, priority=True)
+        output = safe_pagify(output, delims=["\n"], page_length=1900)
         img_sent = session.monster["image"] if not session.easy_mode else None
         for i in output:
             await smart_embed(ctx, i, success=success, image=img_sent)

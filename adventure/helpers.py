@@ -4,13 +4,14 @@ import random
 import re
 import time
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Union
 
 import discord
 from discord.ext.commands import CheckFailure
 from redbot.core.commands import Cog, Context, check
 from redbot.core.i18n import Translator
 from redbot.core.utils.chat_formatting import escape as _escape
+from redbot.core.utils.chat_formatting import pagify
 from redbot.core.utils.common_filters import filter_various_mentions
 
 from .charsheet import Character, Item
@@ -92,6 +93,65 @@ async def smart_embed(
         return msg
     else:
         return await ctx.send(message, ephemeral=ephemeral, view=view)
+
+
+def safe_pagify(
+    text: str,
+    delims: Sequence[str] = ("\n",),
+    *,
+    priority: bool = False,
+    escape_mass_mentions: bool = True,
+    page_length: int = 2000,
+) -> List[str]:
+    """Like redbot's ``pagify``, but never splits a page break in the middle of a ``` code block.
+
+    ``pagify`` has no concept of code blocks, so a long enough message can get cut right after
+    an opening ` ``` ` fence, leaving one page with an unterminated block and the next starting
+    mid-block. This keeps each fenced block atomic, only breaking the surrounding text.
+    """
+    codeblock_re = re.compile(r"```.*?```", re.DOTALL)
+    pages: List[str] = []
+    current = ""
+
+    def flush():
+        nonlocal current
+        if current.strip():
+            pages.append(current)
+        current = ""
+
+    last_end = 0
+    for match in codeblock_re.finditer(text):
+        plain = text[last_end : match.start()]
+        for chunk in pagify(
+            plain,
+            delims=delims,
+            priority=priority,
+            escape_mass_mentions=escape_mass_mentions,
+            page_length=page_length,
+        ):
+            if len(current) + len(chunk) > page_length:
+                flush()
+            current += chunk
+        block = match.group()
+        if len(current) + len(block) > page_length:
+            flush()
+        current += block
+        last_end = match.end()
+
+    plain = text[last_end:]
+    for chunk in pagify(
+        plain,
+        delims=delims,
+        priority=priority,
+        escape_mass_mentions=escape_mass_mentions,
+        page_length=page_length,
+    ):
+        if len(current) + len(chunk) > page_length:
+            flush()
+        current += chunk
+
+    flush()
+    return pages
 
 
 def check_running_adventure(ctx):
