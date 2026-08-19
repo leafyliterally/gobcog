@@ -53,10 +53,8 @@ default_guild = {
     "god_name": "",
     "cart_name": "",
     "embed": True,
-    "cooldown": 0,
     "cartroom": None,
     "cart_timeout": 10800,
-    "cooldown_timer_manual": 120,
     "rebirth_cost": 100.0,
     "disallow_withdraw": True,
     "max_allowed_withdraw": 50000,
@@ -80,4 +78,6 @@ default_global = {
     "max_allowed_withdraw": 50000,
     "disallow_withdraw": False,
     "easy_mode": False,
+    "cooldown": 0,
+    "cooldown_timer_manual": 10,
 }
