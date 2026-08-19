@@ -272,8 +272,7 @@ class DevCommands(AdventureMixin):
             return await ctx.send_help()
         if len(self._sessions) > 0:
             for server_id, adventure in self._sessions.items():
-                server = self.bot.get_guild(server_id)
-                if server is None:
+                if server_id != 0:
                     # should not happen but the type checker is happier
                     continue
                 pdef = adventure.monster_modified_stats["pdef"]
@@ -283,7 +282,7 @@ class DevCommands(AdventureMixin):
                 dipl = adventure.monster_dipl()
                 seed = hex(adventure.rng.internal_seed)[2:].upper()
                 msg += (
-                    f"{server.name} - "
+                    f"{adventure.guild.name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
                     f"(hp:**{hp}**-char:**{dipl}**-pdef:**{pdef:0.2f}**-mdef:**{mdef:0.2f}**-cdef:**{cdef:0.2f}**)\n"
                     f"{box(seed)}\n\n"
