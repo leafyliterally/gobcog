@@ -534,8 +534,13 @@ class Adventure(
         You play by reacting with the offered emojis.
         """
         await ctx.defer()
-        if self._SESSION_KEY in self._sessions and self._sessions[self._SESSION_KEY].finished is False:
+        if self._SESSION_KEY in self._sessions:
             adventure_obj = self._sessions[self._SESSION_KEY]
+            if adventure_obj.finished:
+                return await smart_embed(
+                    ctx,
+                    _("The leaders are still divvying up the spoils from the last adventure. Give them a moment."),
+                )
             link = adventure_obj.message.jump_url
 
             challenge = adventure_obj.challenge if (adventure_obj.easy_mode or adventure_obj.exposed) else _("Unknown")
