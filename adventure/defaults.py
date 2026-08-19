@@ -79,5 +79,5 @@ default_global = {
     "disallow_withdraw": False,
     "easy_mode": False,
     "cooldown": 0,
-    "cooldown_timer_manual": 10,
+    "cooldown_timer_manual": 5,
 }
