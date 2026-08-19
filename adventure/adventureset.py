@@ -270,10 +270,10 @@ class AdventureSetCommands(AdventureMixin):
     async def advcooldown(self, ctx: commands.Context, *, time_in_seconds: int):
         """[Owner] Changes the global cooldown/gather time after an adventure.
 
-        Default is 10 seconds.
+        Default is 5 seconds.
         """
-        if time_in_seconds < 30:
-            return await smart_embed(ctx, _("Cooldown cannot be set to less than 30 seconds."))
+        if time_in_seconds < 5:
+            return await smart_embed(ctx, _("Cooldown cannot be set to less than 5 seconds."))
 
         await self.config.cooldown_timer_manual.set(time_in_seconds)
         await smart_embed(

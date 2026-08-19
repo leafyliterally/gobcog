@@ -455,6 +455,24 @@ class SpecialActionButton(discord.ui.Button):
                 await self.send_music(interaction, c)
 
 
+class ParticipantsButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(
+            label="Participants",
+            emoji="\N{BUSTS IN SILHOUETTE}",
+            style=discord.ButtonStyle.green,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        session: GameSession = self.view
+        action_order = [Action.fight, Action.magic, Action.talk, Action.pray, Action.run]
+        lines = [
+            f"{action.emoji} {user.mention}" for action in action_order for user in getattr(session, action.name, [])
+        ]
+        msg = ("### Participants\n" + "\n".join(lines)) if lines else _("No heroes have chosen an action yet.")
+        await smart_embed(message=msg, ephemeral=True, interaction=interaction, cog=session.cog)
+
+
 class GameSession(discord.ui.View):
     """A class to represent and hold current game sessions per server."""
 
@@ -528,12 +546,14 @@ class GameSession(discord.ui.View):
         self.pray_button = ActionButton(Action.pray)
         self.run_button = ActionButton(Action.run)
         self.special_button = SpecialActionButton(discord.ButtonStyle.blurple)
+        self.participants_button = ParticipantsButton()
         self.add_item(self.attack_button)
-        self.add_item(self.talk_button)
         self.add_item(self.magic_button)
+        self.add_item(self.talk_button)
         self.add_item(self.pray_button)
         self.add_item(self.run_button)
         self.add_item(self.special_button)
+        self.add_item(self.participants_button)
         self._last_update: Dict[Action, int] = {a: 0 for a in Action}
 
     def monster_hp(self) -> int:
