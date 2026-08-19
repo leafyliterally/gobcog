@@ -1,5 +1,8 @@
 # Adventure
 
+> [!IMPORTANT]
+> This repository is forked version from [aikaterna/gobcog](https://github.com/aikaterna/gobcog/) and altered through vibe coding with Claude Cowork/Code for use in [OJ Games Discord Server](discord.gg/ojg). See [Changelog from Source](./CHANGELOG_FROM_SRC.md) for detailed changes.
+
 In this RPG cog originally by locastan - TrustyJAID, Draper, and myself have crafted a fun idle game you can play with the members of your servers.
 
 ### >>> This branch is compatible with Red 3.5, and not 3.4.x <<<
