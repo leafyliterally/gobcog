@@ -155,6 +155,7 @@ class Adventure(
         self._trader_countdown = {}
         self._current_traders = {}
         self._curent_trader_stock = {}
+        self._SESSION_KEY = 0  # adventures are global (bot-wide), so this dict only ever holds one entry
         self._sessions: MutableMapping[int, GameSession] = {}
         self._react_messaged = []
         self.tasks = {}
@@ -533,15 +534,15 @@ class Adventure(
         You play by reacting with the offered emojis.
         """
         await ctx.defer()
-        if ctx.guild.id in self._sessions and self._sessions[ctx.guild.id].finished is False:
-            adventure_obj = self._sessions[ctx.guild.id]
+        if self._SESSION_KEY in self._sessions and self._sessions[self._SESSION_KEY].finished is False:
+            adventure_obj = self._sessions[self._SESSION_KEY]
             link = adventure_obj.message.jump_url
 
             challenge = adventure_obj.challenge if (adventure_obj.easy_mode or adventure_obj.exposed) else _("Unknown")
             return await smart_embed(
                 ctx,
                 _(
-                    f"There's already another adventure going on in this server.\n"
+                    f"There's already another adventure going on.\n"
                     f"Currently fighting: [{challenge}]({link})"
                 ),
             )
@@ -561,10 +562,9 @@ class Adventure(
                     req=250, name=currency_name, extra=extra
                 ),
             )
-        guild_settings = await self.config.guild(ctx.guild).all()
-        cooldown = guild_settings["cooldown"]
 
-        cooldown_time = guild_settings["cooldown_timer_manual"]
+        cooldown = await self.config.cooldown()
+        cooldown_time = await self.config.cooldown_timer_manual()
 
         if cooldown + cooldown_time > time.time() and ctx.author.id not in DEV_LIST:
             cooldown_time = int(cooldown + cooldown_time)
@@ -580,21 +580,20 @@ class Adventure(
         adventure_msg = _("You feel adventurous, {}?").format(bold(ctx.author.display_name))
         try:
             reward, participants = await self._simple(ctx, adventure_msg, challenge)
-            await self.config.guild(ctx.guild).cooldown.set(time.time())
-            if ctx.guild.id in self._sessions:
-                self._sessions[ctx.guild.id].finished = True
+            if self._SESSION_KEY in self._sessions:
+                self._sessions[self._SESSION_KEY].finished = True
         except Exception as exc:
-            if ctx.guild.id in self._sessions:
-                self._sessions[ctx.guild.id].finished = True
-            await self.config.guild(ctx.guild).cooldown.set(0)
+            if self._SESSION_KEY in self._sessions:
+                self._sessions[self._SESSION_KEY].finished = True
+            await self.config.cooldown.set(0)
             log.exception("Something went wrong controlling the game", exc_info=exc)
-            while ctx.guild.id in self._sessions:
-                del self._sessions[ctx.guild.id]
+            while self._SESSION_KEY in self._sessions:
+                del self._sessions[self._SESSION_KEY]
             return
         if not reward and not participants:
-            await self.config.guild(ctx.guild).cooldown.set(0)
-            while ctx.guild.id in self._sessions:
-                del self._sessions[ctx.guild.id]
+            await self.config.cooldown.set(0)
+            while self._SESSION_KEY in self._sessions:
+                del self._sessions[self._SESSION_KEY]
             return
         reward_copy = reward.copy()
         send_message = ""
@@ -636,8 +635,9 @@ class Adventure(
                 extramsg = _(f"{extramsg} to repair their gear.")
                 for msg in pagify(extramsg, page_length=1900):
                     await smart_embed(ctx, msg, success=False)
-        while ctx.guild.id in self._sessions:
-            del self._sessions[ctx.guild.id]
+        await self.config.cooldown.set(time.time())
+        while self._SESSION_KEY in self._sessions:
+            del self._sessions[self._SESSION_KEY]
 
     @_adventure.error
     async def _error_handler(self, ctx: commands.Context, error: Exception) -> None:
@@ -652,10 +652,10 @@ class Adventure(
                 commands.CommandOnCooldown,
             ),
         ):
-            if ctx.guild.id in self._sessions:
-                self._sessions[ctx.guild.id].finished = True
-            while ctx.guild.id in self._sessions:
-                del self._sessions[ctx.guild.id]
+            if self._SESSION_KEY in self._sessions:
+                self._sessions[self._SESSION_KEY].finished = True
+            while self._SESSION_KEY in self._sessions:
+                del self._sessions[self._SESSION_KEY]
             handled = False
         elif isinstance(error, RuntimeError):
             handled = True
@@ -940,7 +940,7 @@ class Adventure(
         # if ctx.author.id in DEV_LIST:
         # timer = 20
 
-        self._sessions[ctx.guild.id] = GameSession(
+        self._sessions[self._SESSION_KEY] = GameSession(
             ctx=ctx,
             cog=self,
             challenge=new_challenge if not no_monster else None,
@@ -966,10 +966,10 @@ class Adventure(
             f"{bold(ctx.author.display_name)}{rng.choice(self.RAISINS)}"
         )
         await self._choice(ctx, adventure_msg)
-        if ctx.guild.id not in self._sessions:
+        if self._SESSION_KEY not in self._sessions:
             return (None, None)
         rewards = self._rewards
-        participants = self._sessions[ctx.guild.id].participants
+        participants = self._sessions[self._SESSION_KEY].participants
         return (rewards, participants)
 
     def dispatch_adventure(self, session: GameSession, was_exposed: bool = False):
@@ -1003,7 +1003,7 @@ class Adventure(
             # Notify of immortal/possessed
 
     async def _choice(self, ctx: commands.Context, adventure_msg):
-        session = self._sessions[ctx.guild.id]
+        session = self._sessions[self._SESSION_KEY]
         easy_mode = session.easy_mode
         embed = discord.Embed(colour=discord.Colour.blurple())
         embed.set_footer(text=f"Seed {hex(session.rng.internal_seed)[2:].upper()}")
@@ -1154,8 +1154,8 @@ class Adventure(
                 return
         if not await self.has_perm(user):
             return
-        if guild.id in self._sessions:
-            if reaction.message.id == self._sessions[guild.id].message_id:
+        if self._SESSION_KEY in self._sessions:
+            if reaction.message.id == self._sessions[self._SESSION_KEY].message_id:
                 if guild.id in self._adventure_countdown:
                     (timer, done, sremain) = self._adventure_countdown[guild.id]
                     if sremain > 3:
@@ -1163,7 +1163,7 @@ class Adventure(
 
     async def _handle_adventure(self, reaction: discord.Reaction, user: discord.Member):
         action = {v: k for k, v in self._adventure_controls.items()}[str(reaction.emoji)]
-        session = self._sessions[user.guild.id]
+        session = self._sessions[self._SESSION_KEY]
         has_fund = await has_funds(user, 250)
         for x in ["fight", "magic", "talk", "pray", "run"]:
             if user in getattr(session, x, []):
@@ -1402,7 +1402,7 @@ class Adventure(
         return treasure
 
     async def _result(self, ctx: commands.Context, message: discord.Message):
-        if ctx.guild.id not in self._sessions:
+        if self._SESSION_KEY not in self._sessions:
             log.debug("Session not found for %s", ctx.guild.id)
             return
         calc_msg = await ctx.send(_("Calculating..."))
@@ -1415,7 +1415,7 @@ class Adventure(
         lost = False
         with contextlib.suppress(discord.HTTPException):
             await message.clear_reactions()
-        session = self._sessions[ctx.guild.id]
+        session = self._sessions[self._SESSION_KEY]
         challenge = session.challenge
         fight_list = list(set(session.fight))
         talk_list = list(set(session.talk))
@@ -1423,11 +1423,11 @@ class Adventure(
         run_list = list(set(session.run))
         magic_list = list(set(session.magic))
 
-        self._sessions[ctx.guild.id].fight = fight_list
-        self._sessions[ctx.guild.id].talk = talk_list
-        self._sessions[ctx.guild.id].pray = pray_list
-        self._sessions[ctx.guild.id].run = run_list
-        self._sessions[ctx.guild.id].magic = magic_list
+        self._sessions[self._SESSION_KEY].fight = fight_list
+        self._sessions[self._SESSION_KEY].talk = talk_list
+        self._sessions[self._SESSION_KEY].pray = pray_list
+        self._sessions[self._SESSION_KEY].run = run_list
+        self._sessions[self._SESSION_KEY].magic = magic_list
         fight_name_list = []
         wizard_name_list = []
         talk_name_list = []
@@ -1972,7 +1972,7 @@ class Adventure(
     async def handle_run(self, guild_id, attack, diplomacy, magic, shame=False):
         runners = []
         msg = ""
-        session = self._sessions[guild_id]
+        session = self._sessions[self._SESSION_KEY]
         if len(list(session.run)) != 0:
             for user in session.run:
                 runners.append(f"{bold(user.display_name)}")
@@ -1984,7 +1984,7 @@ class Adventure(
         return (attack, diplomacy, magic, msg)
 
     async def handle_fight(self, guild_id, fumblelist, critlist, attack, magic):
-        session = self._sessions[guild_id]
+        session = self._sessions[self._SESSION_KEY]
         ctx = session.ctx
         fight_list = list(set(session.fight))
         magic_list = list(set(session.magic))
@@ -2165,7 +2165,7 @@ class Adventure(
         return (fumblelist, critlist, attack, magic, msg)
 
     async def handle_pray(self, guild_id, fumblelist, attack, diplomacy, magic):
-        session = self._sessions[guild_id]
+        session = self._sessions[self._SESSION_KEY]
         ctx = session.ctx
         talk_list = list(set(session.talk))
         pray_list = list(set(session.pray))
@@ -2317,7 +2317,7 @@ class Adventure(
         return (fumblelist, attack, diplomacy, magic, msg)
 
     async def handle_talk(self, guild_id, fumblelist, critlist, diplomacy):
-        session = self._sessions[guild_id]
+        session = self._sessions[self._SESSION_KEY]
         ctx = session.ctx
         cdef = max(session.monster_modified_stats["cdef"], 0.5)
         talk_list = list(set(session.talk))
@@ -2397,7 +2397,7 @@ class Adventure(
         return (fumblelist, critlist, diplomacy, msg)
 
     async def handle_basilisk(self, ctx: commands.Context):
-        session = self._sessions[ctx.guild.id]
+        session = self._sessions[self._SESSION_KEY]
         ctx = session.ctx
         fight_list = list(set(session.fight))
         talk_list = list(set(session.talk))
@@ -2560,7 +2560,8 @@ class Adventure(
             return
         if message.channel.id not in channels:
             return
-        if not message.author.bot and message.guild.id not in self._sessions:
+        active_session = self._sessions.get(self._SESSION_KEY)
+        if not message.author.bot and (active_session is None or active_session.guild.id != message.guild.id):
             roll = random.randint(1, 20)
             if roll == 20:
                 try:
@@ -2661,7 +2662,7 @@ class Adventure(
             ctx.guild,
         )
         can_embed = not ctx.guild or (await _config.guild(ctx.guild).embed() and await ctx.embed_requested())
-        session = self._sessions.get(ctx.guild.id)
+        session = self._sessions.get(self._SESSION_KEY)
         if session:
             session_bonus = 0 if session.easy_mode else 1
         else:

@@ -266,17 +266,16 @@ class AdventureSetCommands(AdventureMixin):
         )
 
     @adventureset.command(name="advcooldown", hidden=True)
-    @commands.admin_or_permissions(administrator=True)
-    @commands.guild_only()
+    @commands.is_owner()
     async def advcooldown(self, ctx: commands.Context, *, time_in_seconds: int):
-        """[Admin] Changes the cooldown/gather time after an adventure.
+        """[Owner] Changes the global cooldown/gather time after an adventure.
 
-        Default is 120 seconds.
+        Default is 10 seconds.
         """
         if time_in_seconds < 30:
             return await smart_embed(ctx, _("Cooldown cannot be set to less than 30 seconds."))
 
-        await self.config.guild(ctx.guild).cooldown_timer_manual.set(time_in_seconds)
+        await self.config.cooldown_timer_manual.set(time_in_seconds)
         await smart_embed(
             ctx,
             _("Adventure cooldown set to {cooldown} seconds.").format(cooldown=time_in_seconds),
@@ -518,7 +517,7 @@ class AdventureSetCommands(AdventureMixin):
 
         single_adventure_restrict = _("Restricted") if global_data["restrict"] else _("Unlimited")
         adventure_in_embed = _("Allow embeds") if guild_data["embed"] else _("No embeds")
-        time_after_adventure = parse_timedelta(f"{guild_data['cooldown_timer_manual']} seconds")
+        time_after_adventure = parse_timedelta(f"{global_data['cooldown_timer_manual']} seconds")
 
         separate_economy = global_data["separate_economy"]
         economy_string = _("\n# Economy Settings\n")

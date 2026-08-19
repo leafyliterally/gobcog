@@ -58,10 +58,10 @@ class DevCommands(AdventureMixin):
     @commands.bot_has_permissions(add_reactions=True)
     @commands.is_owner()
     async def _devcooldown(self, ctx: commands.Context):
-        """[Dev] Resets the after-adventure cooldown in this server."""
+        """[Dev] Resets the global after-adventure cooldown."""
         if not await self.no_dev_prompt(ctx):
             return
-        await self.config.guild(ctx.guild).cooldown.set(0)
+        await self.config.cooldown.set(0)
         await ctx.tick()
 
     @commands.command()
