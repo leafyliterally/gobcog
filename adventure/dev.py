@@ -124,11 +124,11 @@ class DevCommands(AdventureMixin):
             return
         targets = users or [ctx.author]
         if not is_dev(ctx.author):
-            if rebirth_level > 100:
+            if rebirth_level > 250:
                 await ctx.send("Rebirth is too high.")
                 await ctx.send_help()
                 return
-            elif character_level > 1000:
+            elif character_level > 2500:
                 await ctx.send("Level is too high.")
                 await ctx.send_help()
                 return

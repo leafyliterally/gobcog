@@ -372,7 +372,7 @@ class EconomyCommands(AdventureMixin):
         self,
         ctx: commands.Context,
         loot_type: str,
-        users: commands.Greedy[Union[discord.Member, discord.User]] = None,
+        users: commands.Greedy[discord.Member] = None,
         number: int = 1,
     ):
         """[Owner] Give treasure chest(s) to all specified users."""
