@@ -529,6 +529,7 @@ class ClassAbilities(AdventureMixin):
         """[Psychic Class Only]
         This allows a Psychic to expose the current enemy's weakeness to the party.
         """
+        SESSION_ID = 0
         try:
             c = await Character.from_json(ctx, self.config, ctx.author, self._daily_bonus)
         except Exception:
@@ -541,7 +542,7 @@ class ClassAbilities(AdventureMixin):
                 _("{user}, you need to be a Psychic to do this.").format(user=bold(ctx.author.display_name)),
             )
         else:
-            if ctx.guild.id not in self._sessions:
+            if SESSION_ID not in self._sessions:
                 return await smart_embed(
                     ctx,
                     _("There are no active adventures."),
@@ -562,8 +563,8 @@ class ClassAbilities(AdventureMixin):
             if c.heroclass["cooldown"] <= time.time():
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
-                if ctx.guild.id in self._sessions and self._sessions[ctx.guild.id].insight[0] < roll:
-                    self._sessions[ctx.guild.id].insight = roll, c
+                if SESSION_ID in self._sessions and self._sessions[SESSION_ID].insight[0] < roll:
+                    self._sessions[SESSION_ID].insight = roll, c
                     good = True
                 else:
                     good = False
@@ -598,7 +599,7 @@ class ClassAbilities(AdventureMixin):
                                 skill=self.emojis.skills.psychic,
                             ),
                         )
-                    session = self._sessions[ctx.guild.id]
+                    session = self._sessions[SESSION_ID]
                     was_exposed = not session.exposed
                     if roll <= 0.4:
                         return await smart_embed(ctx, _("You suck."))
@@ -642,7 +643,7 @@ class ClassAbilities(AdventureMixin):
                                 if session.transcended
                                 else f"{self.emojis.skills.psychic}",
                             )
-                            self._sessions[ctx.guild.id].exposed = True
+                            self._sessions[SESSION_ID].exposed = True
                         elif roll >= 0.95:
                             hp = session.monster_hp()
                             dipl = session.monster_dipl()
@@ -656,7 +657,7 @@ class ClassAbilities(AdventureMixin):
                                 dipl_symbol=self.emojis.dipl,
                                 dipl=humanize_number(int(dipl)),
                             )
-                            self._sessions[ctx.guild.id].exposed = True
+                            self._sessions[SESSION_ID].exposed = True
                         elif roll >= 0.90:
                             hp = session.monster_hp()
                             msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
@@ -665,18 +666,18 @@ class ClassAbilities(AdventureMixin):
                                 hp_symbol=self.emojis.hp,
                                 hp=humanize_number(int(hp)),
                             )
-                            self._sessions[ctx.guild.id].exposed = True
+                            self._sessions[SESSION_ID].exposed = True
                         elif roll > 0.75:
                             msg += _("This monster is **a{attr} {challenge}**.\n").format(
                                 challenge=session.challenge,
                                 attr=session.attribute,
                             )
-                            self._sessions[ctx.guild.id].exposed = True
+                            self._sessions[SESSION_ID].exposed = True
                         elif roll > 0.5:
                             msg += _("This monster is **a {challenge}**.\n").format(
                                 challenge=session.challenge,
                             )
-                            self._sessions[ctx.guild.id].exposed = True
+                            self._sessions[SESSION_ID].exposed = True
 
                         if roll >= physical_roll:
                             if pdef >= 2.0:
