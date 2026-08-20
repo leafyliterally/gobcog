@@ -496,7 +496,7 @@ class Character:
     def __str__(self):
         """Define str to be our default look for the character sheet :thinkies:"""
         next_lvl = int((self.lvl + 1) ** 3.5)
-        max_level_xp = int((self.maxlevel + 1) ** 3.5)
+        max_level_xp = int((self.maxlevel) ** 3.5)
 
         if self.heroclass != {} and "name" in self.heroclass:
             class_desc = self.heroclass["name"] + "\n\n" + self.heroclass["desc"]
@@ -556,7 +556,7 @@ class Character:
             luck=humanize_number(self.luck),
             bal=humanize_number(self.bal),
             xp=humanize_number(round(self.exp)),
-            next_lvl=humanize_number(next_lvl) if self.lvl < self.maxlevel else humanize_number(max_level_xp),
+            next_lvl=humanize_number(max_level_xp),
             skill_points=0 if self.skill["pool"] < 0 else self.skill["pool"],
             set_bonus=(
                 f"( {self.gear_set_bonus.get('att'):<2} | "
