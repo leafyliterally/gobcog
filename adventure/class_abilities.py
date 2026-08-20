@@ -656,15 +656,32 @@ class ClassAbilities(AdventureMixin):
                 c.heroclass["cooldown"] = time.time()
                 async with self.get_lock(c.user):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                    if good:
+                    textroll = random.randint(1, 6)
+                if good:
+                    if textroll == 1 or textroll == 4:
                         await smart_embed(
                             ctx,
-                            _("{skill} {c} is focusing on the monster ahead...{skill}").format(
+                            _("{skill} {c} j wnf vxk vxmrorna rb jkxdc... fqjc lxdum rc vnjw?{skill}").format(
+                                c=bold(ctx.author.display_name),
+                                skill=self.emojis.skills.berserker,
+                            ),
+                        )
+                    elif textroll == 2 or textroll == 5:
+                        await smart_embed(
+                            ctx,
+                            _("{skill} {c} rb oxldbrwp xw cqn vxwbcna jqnjm...{skill}").format(
+                                c=bold(ctx.author.display_name),
+                                skill=self.emojis.skills.berserker,
+                            ),
+                        )
+                    elif textroll == 3 or textroll == 6:
+                        await smart_embed(
+                            ctx,
+                            _("{skill} {c} anenju rc frcqrw jw rwbrpqc cx yaxlnnm...{skill}").format(
                                 c=bold(ctx.author.display_name),
                                 skill=self.emojis.skills.psychic,
                             ),
                         )
-                if good:
                     session = self._sessions[SESSION_ID]
                     if roll <= 0.4:
                         return await smart_embed(ctx, _("You suck."))
