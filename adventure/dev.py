@@ -190,7 +190,7 @@ class DevCommands(AdventureMixin):
         embed_list = []
 
         if len(self._sessions) > 0:
-            for _, adventure in self._sessions.items():
+            for server_id, adventure in self._sessions.items():
                 stat_range = self._adv_results.get_stat_range(ctx)
                 pdef = adventure.monster_modified_stats["pdef"]
                 mdef = adventure.monster_modified_stats["mdef"]
