@@ -190,7 +190,7 @@ class DevCommands(AdventureMixin):
         embed_list = []
 
         if len(self._sessions) > 0:
-            for server_id, adventure in self._sessions.items():
+            for _, adventure in self._sessions.items():
                 stat_range = self._adv_results.get_stat_range(ctx)
                 pdef = adventure.monster_modified_stats["pdef"]
                 mdef = adventure.monster_modified_stats["mdef"]
@@ -206,9 +206,9 @@ class DevCommands(AdventureMixin):
                     * adventure.monster_stats
                 )
                 msg += (
-                    f"{self.bot.get_guild(server_id).name} - "
+                    f"{adventure.guild.name} - "
                     f"[{adventure.challenge}]({adventure.message.jump_url})\n"
-                    f"[{stat_range['stat_type']}-min:{stat_range['min_stat']}-max:{stat_range['max_stat']}-winratio:{stat_range['win_percent']}] "
+                    f"[{stat_range['stat_type']}-min:{stat_range['min_stat']}-max:{stat_range['max_stat']}-winratio:{stat_range['win_percent']}]\n"
                     f"(hp:{hp}-char:{dipl}-pdef:{pdef}-mdef:{mdef}-cdef:{cdef})\n\n"
                 )
         else:
