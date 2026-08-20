@@ -133,7 +133,7 @@ class DevCommands(AdventureMixin):
                 await ctx.send("Rebirth is too high.")
                 await ctx.send_help()
                 return
-            elif character_level > 1000:
+            elif character_level > 2500:
                 await ctx.send("Level is too high.")
                 await ctx.send_help()
                 return

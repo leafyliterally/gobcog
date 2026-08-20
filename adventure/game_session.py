@@ -201,15 +201,15 @@ class SpecialActionButton(discord.ui.Button):
                     choice = self.view.rng.choice(["physical", "magic", "diplomacy"])
                     if choice == "physical":
                         physical_roll = 0.4
-                        magic_roll = 0.8
-                        diplo_roll = 0.6
+                        magic_roll = 0.6
+                        diplo_roll = 0.8
                     elif choice == "magic":
                         physical_roll = 0.8
                         magic_roll = 0.4
                         diplo_roll = 0.6
                     else:
-                        physical_roll = 0.7
-                        magic_roll = 0.7
+                        physical_roll = 0.6
+                        magic_roll = 0.8
                         diplo_roll = 0.4
 
                     if roll == 1:
