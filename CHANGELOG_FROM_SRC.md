@@ -83,9 +83,13 @@ upstream. Listed oldest to newest.
 - Cooldown reduction for `[p]backpack eset` to 30s.
 - `[p]skill reset` confirmation buttons: fixed `AttributeError` on `view.message` that silently kept the Yes/No buttons stuck on the message.
 
-## `latest`
+## `dc17e8f` — wscoreboard fix attempt + cd sentence fix + insight buff
 
 - Fixed doubled "in" in 5 cooldown messages (Discord timestamp already says "in X").
 - `[p]wscoreboard` no longer lists users with a zero weekly score.
 - Increases `[p]insight` on transcended modifier
 - Change Insight icon when doing insight ability
+
+## `latest`
+
+- Fixed `[p]adventure` crashing on a no-monster encounter.
