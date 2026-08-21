@@ -157,7 +157,9 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def dispatch_adventure(self, session: GameSession, was_exposed: bool = False):
+    def dispatch_adventure(
+        self, session: GameSession, was_exposed: Optional[bool] = None, transcended_revealed: bool = False
+    ):
         raise NotImplementedError()
 
     @abstractmethod

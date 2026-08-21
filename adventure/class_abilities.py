@@ -524,7 +524,6 @@ class ClassAbilities(AdventureMixin):
 
     @commands.hybrid_command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=30, type=commands.BucketType.user)
     async def insight(self, ctx: commands.Context):
         """[Psychic Class Only]
         This allows a Psychic to expose the current enemy's weakeness to the party.
@@ -601,6 +600,7 @@ class ClassAbilities(AdventureMixin):
                         )
                     session = self._sessions[SESSION_ID]
                     was_exposed = not session.exposed
+                    transcended_exposed_before = session.transcended_exposed
                     if roll <= 0.4:
                         return await smart_embed(ctx, _("You suck."))
                     msg = ""
@@ -644,6 +644,7 @@ class ClassAbilities(AdventureMixin):
                                 else f"{self.emojis.skills.psychic}",
                             )
                             self._sessions[SESSION_ID].exposed = True
+                            self._sessions[SESSION_ID].transcended_exposed = True
                         elif roll >= 0.95:
                             hp = session.monster_hp()
                             dipl = session.monster_dipl()
@@ -735,12 +736,13 @@ class ClassAbilities(AdventureMixin):
                             image = session.monster["image"]
                         response_msg = await smart_embed(ctx, msg, image=image)
                         if session.exposed and not session.easy_mode:
-                            self.dispatch_adventure(session, was_exposed=was_exposed)
+                            transcended_revealed = session.transcended_exposed and not transcended_exposed_before
+                            self.dispatch_adventure(session, was_exposed=was_exposed, transcended_revealed=transcended_revealed)
                         return response_msg
                     else:
                         return await smart_embed(ctx, _("You have failed to discover anything about this monster."))
             else:
-                cooldown_time = (c.heroclass["cooldown"]) + cooldown_time - time.time()
+                cooldown_time = int(c.heroclass["cooldown"])
                 return await smart_embed(
                     ctx,
                     _(

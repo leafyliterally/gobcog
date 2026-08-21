@@ -60,3 +60,20 @@ upstream. Listed oldest to newest.
 - `[p]adventurestats` still resolved sessions via `get_guild(server_id)`, which broke once the
   session key became a fixed sentinel instead of a real guild ID.
 - Fixed to check the sentinel key directly and read `GameSession.guild.name` instead.
+
+## `51d71e4` — fix insight for global adventure
+
+- Fix `[p]insight` broken after global adventure edits.
+
+## `eaf34c1` — qol: update stats target xp to be max lvl instead of next lvl
+
+- Character sheet's target XP now shows the max-level XP requirement instead of next-level XP.
+- Insight's physical/magic/diplomacy roll thresholds retuned again (physical-choice and
+  balanced-choice branches).
+- `[p]devrebirth` max character level raised 1000 → 2500.
+
+## `latest` — fix insight cooldown display and transcended reveal timing
+
+- `[p]insight`: cooldown message now shows the correct end time via discord timestamp; removed cooldown for insight.
+- Adventure dispatch event now correctly dispatch event in hard mode.
+- `_result()`: post-battle messages now show "Transcended" in hard mode whenever one occurs.

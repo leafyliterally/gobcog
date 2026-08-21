@@ -938,8 +938,8 @@ class Adventure(
                 timer = 60 * 3
         else:
             if transcended:
-                # Hide Transcended on Easy mode
-                new_challenge = challenge.replace("Ascended", "")
+                # Hide Transcended on Hard mode
+                new_challenge = challenge.replace("Ascended ", "")
             timer = 60 * 3
             no_monster = rng.randint(0, 100) == 25
         # if ctx.author.id in DEV_LIST:
@@ -977,7 +977,9 @@ class Adventure(
         participants = self._sessions[self._SESSION_KEY].participants
         return (rewards, participants)
 
-    def dispatch_adventure(self, session: GameSession, was_exposed: bool = False):
+    def dispatch_adventure(
+        self, session: GameSession, was_exposed: Optional[bool] = None, transcended_revealed: bool = False
+    ):
         """
         Dispatches adventures based on the game session.
 
@@ -985,8 +987,8 @@ class Adventure(
         when another cog sees this event. It also reveals everything about the session
         so the filtering actually occurs via the event itself.
         """
-        if not was_exposed:
-            # Don't ping regular adventures twice, this one already occured at the start always
+        if was_exposed is None:
+            # This is the initial dispatch at the start of the adventure, only ping once.
             self.bot.dispatch("adventure", session)
         if session.easy_mode or was_exposed is True:
             if session.boss:
@@ -995,17 +997,20 @@ class Adventure(
                 self.bot.dispatch("adventure_miniboss", session)
             # Notify of boss/miniboss
 
-            if session.transcended:
-                self.bot.dispatch("adventure_transcended", session)
-            elif session.ascended:
+            if session.ascended and not session.transcended:
                 self.bot.dispatch("adventure_ascended", session)
-            # Notify of ascended/descended
+            # Notify of ascended
 
             if session.immortal:
                 self.bot.dispatch("adventure_immortal", session)
             elif session.possessed:
                 self.bot.dispatch("adventure_possessed", session)
             # Notify of immortal/possessed
+
+        if session.transcended and (session.easy_mode or transcended_revealed):
+            # Only notify once the perfect Insight roll has actually revealed Transcended
+            # to the party, not merely because the monster's basic info was exposed.
+            self.bot.dispatch("adventure_transcended", session)
 
     async def _choice(self, ctx: commands.Context, adventure_msg):
         session = self._sessions[self._SESSION_KEY]
@@ -1422,6 +1427,8 @@ class Adventure(
             await message.clear_reactions()
         session = self._sessions[self._SESSION_KEY]
         challenge = session.challenge
+        if challenge and session.transcended and "Transcended" not in challenge:
+            challenge = _("Transcended {}").format(challenge.strip())
         fight_list = list(set(session.fight))
         talk_list = list(set(session.talk))
         pray_list = list(set(session.pray))
@@ -1682,7 +1689,7 @@ class Adventure(
                         temp_repair.append(user)
                 if loss_list:
                     self._loss_message[ctx.message.id] = humanize_list(loss_list).strip()
-            miniboss = session.challenge
+            miniboss = challenge
             special = session.miniboss["special"]
             result_msg += _("The {miniboss}'s {special} was countered, but they still managed to kill you.").format(
                 miniboss=bold(miniboss), special=special
@@ -1695,7 +1702,7 @@ class Adventure(
             if slain:
                 group = fighters_final_string if len(fight_list) == 1 else wizards_final_string
                 text = _("{b_group} has slain the {chall} in an epic battle!").format(
-                    b_group=group, chall=session.challenge
+                    b_group=group, chall=challenge
                 )
                 text += await self._reward(
                     ctx,
@@ -1707,7 +1714,7 @@ class Adventure(
 
             if persuaded:
                 text = _("{b_talkers} almost died in battle, but confounded the {chall} in the last second.").format(
-                    b_talkers=talkers_final_string, chall=session.challenge
+                    b_talkers=talkers_final_string, chall=challenge
                 )
                 text += await self._reward(
                     ctx,
@@ -1780,7 +1787,7 @@ class Adventure(
                             "{b_preachers} aided in {god}'s name."
                         ).format(
                             b_fighters=fighters_final_string,
-                            chall=session.challenge,
+                            chall=challenge,
                             b_talkers=talkers_final_string,
                             b_wizard=wizards_final_string,
                             b_preachers=preachermen_final_string,
@@ -1794,7 +1801,7 @@ class Adventure(
                             "{b_preachers} aided in {god}'s name."
                         ).format(
                             b_group=group,
-                            chall=session.challenge,
+                            chall=challenge,
                             b_talkers=talkers_final_string,
                             b_preachers=preachermen_final_string,
                             god=god,
@@ -1807,7 +1814,7 @@ class Adventure(
                             "{b_wizard} chanted magical incantations."
                         ).format(
                             b_fighters=fighters_final_string,
-                            chall=session.challenge,
+                            chall=challenge,
                             b_talkers=talkers_final_string,
                             b_wizard=wizards_final_string,
                         )
@@ -1815,7 +1822,7 @@ class Adventure(
                         group = fighters_final_string if len(fight_list) > 0 else wizards_final_string
                         text = _(
                             "{b_group} slayed the {chall} in battle, while {b_talkers} distracted with insults."
-                        ).format(b_group=group, chall=session.challenge, b_talkers=talkers_final_string)
+                        ).format(b_group=group, chall=challenge, b_talkers=talkers_final_string)
                 text += await self._reward(
                     ctx,
                     [u for u in fight_list + magic_list + pray_list + talk_list if u not in fumblelist],
@@ -1828,12 +1835,12 @@ class Adventure(
                 if len(pray_list) > 0:
                     text = _("{b_talkers} talked the {chall} down with {b_preachers}'s blessing.").format(
                         b_talkers=talkers_final_string,
-                        chall=session.challenge,
+                        chall=challenge,
                         b_preachers=preachermen_final_string,
                     )
                 else:
                     text = _("{b_talkers} talked the {chall} down.").format(
-                        b_talkers=talkers_final_string, chall=session.challenge
+                        b_talkers=talkers_final_string, chall=challenge
                     )
                 text += await self._reward(
                     ctx,
@@ -1852,7 +1859,7 @@ class Adventure(
                             "{b_wizard} chanting magical incantations."
                         ).format(
                             b_fighters=fighters_final_string,
-                            chall=session.challenge,
+                            chall=challenge,
                             b_preachers=preachermen_final_string,
                             b_wizard=wizards_final_string,
                         )
@@ -1863,7 +1870,7 @@ class Adventure(
                             "in a most heroic battle with a little help from {b_preachers}."
                         ).format(
                             b_group=group,
-                            chall=session.challenge,
+                            chall=challenge,
                             b_preachers=preachermen_final_string,
                         )
                 else:
@@ -1873,13 +1880,13 @@ class Adventure(
                             "in a most heroic battle with {b_wizard} chanting magical incantations."
                         ).format(
                             b_fighters=fighters_final_string,
-                            chall=session.challenge,
+                            chall=challenge,
                             b_wizard=wizards_final_string,
                         )
                     else:
                         group = fighters_final_string if len(fight_list) > 0 else wizards_final_string
                         text = _("{b_group} killed the {chall} in an epic fight.").format(
-                            b_group=group, chall=session.challenge
+                            b_group=group, chall=challenge
                         )
                 text += await self._reward(
                     ctx,

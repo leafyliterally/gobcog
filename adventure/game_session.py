@@ -186,6 +186,7 @@ class SpecialActionButton(discord.ui.Button):
             if good:
                 session = self.view
                 was_exposed = not session.exposed
+                transcended_exposed_before = session.transcended_exposed
                 if roll <= 0.4:
                     return await smart_embed(interaction=interaction, message=_("You suck."), cog=self.view.cog)
                 msg = ""
@@ -229,6 +230,7 @@ class SpecialActionButton(discord.ui.Button):
                             else f"{self.view.cog.emojis.skills.psychic}",
                         )
                         self.view.exposed = True
+                        self.view.transcended_exposed = True
                     elif roll >= 0.95:
                         hp = session.monster_hp()
                         dipl = session.monster_dipl()
@@ -328,7 +330,10 @@ class SpecialActionButton(discord.ui.Button):
                         interaction=interaction,
                     )
                     if session.exposed and not session.easy_mode:
-                        session.cog.dispatch_adventure(session, was_exposed=was_exposed)
+                        transcended_revealed = session.transcended_exposed and not transcended_exposed_before
+                        session.cog.dispatch_adventure(
+                            session, was_exposed=was_exposed, transcended_revealed=transcended_revealed
+                        )
                     return response_msg
                 else:
                     return await smart_embed(
@@ -502,6 +507,7 @@ class GameSession(discord.ui.View):
     insight = (0, None)
     no_monster: bool = False
     exposed: bool = False
+    transcended_exposed: bool = False
     finished: bool = False
     rng: Random
     _last_update: Dict[Action, int]

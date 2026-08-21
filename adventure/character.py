@@ -106,6 +106,7 @@ class CharacterCommands(AdventureMixin):
                         ctx,
                         _("Don't play games with me, {}.").format(bold(ctx.author.display_name)),
                     )
+                await view.message.edit(view=None)
                 return
 
             if c.skill["pool"] <= 0:
