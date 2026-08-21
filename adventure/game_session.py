@@ -109,7 +109,7 @@ class SpecialActionButton(discord.ui.Button):
         msg = _(
             "Your hero is currently recovering from the last time "
             "they used this skill or they have just changed their heroclass. "
-            "Try again in {cooldown}."
+            "Try again {cooldown}."
         ).format(cooldown=f"<t:{cooldown_time}:R>")
         await smart_embed(interaction=interaction, message=msg, success=False, ephemeral=True, cog=self.view.cog)
 
@@ -170,12 +170,12 @@ class SpecialActionButton(discord.ui.Button):
                 if textroll == 1 or textroll == 4:
                     msg = _("{skill} **{c}** j wnf vxk vxmrorna rb jkxdc... fqjc lxdum rc vnjw?{skill}").format(
                         c=escape(user.display_name),
-                        skill=self.view.cog.emojis.skills.berserker,
+                        skill=self.view.cog.emojis.skills.psychic,
                     )
                 elif textroll == 2 or textroll == 5:
                     msg = _("{skill} **{c}** rb oxldbrwp xw cqn vxwbcna jqnjm...{skill}").format(
                         c=escape(user.display_name),
-                        skill=self.view.cog.emojis.skills.berserker,
+                        skill=self.view.cog.emojis.skills.psychic,
                     )
                 else:
                     msg = _("{skill} **{c}** anenju rc frcqrw jw rwbrpqc cx yaxlnnm...{skill}").format(
@@ -213,7 +213,7 @@ class SpecialActionButton(discord.ui.Button):
                         magic_roll = 0.8
                         diplo_roll = 0.4
 
-                    if roll == 1:
+                    if roll >= 0.98:
                         hp = session.monster_hp()
                         dipl = session.monster_dipl()
                         msg += _(

@@ -78,7 +78,14 @@ upstream. Listed oldest to newest.
 - Adventure dispatch event now correctly dispatch event in hard mode.
 - `_result()`: post-battle messages now show "Transcended" in hard mode whenever one occurs.
 
-## `latest`
+## `ad67d81` — bp eset cd reduce and skill reset bug fix
 
 - Cooldown reduction for `[p]backpack eset` to 30s.
 - `[p]skill reset` confirmation buttons: fixed `AttributeError` on `view.message` that silently kept the Yes/No buttons stuck on the message.
+
+## `latest`
+
+- Fixed doubled "in" in 5 cooldown messages (Discord timestamp already says "in X").
+- `[p]wscoreboard` no longer lists users with a zero weekly score.
+- Increases `[p]insight` on transcended modifier
+- Change Insight icon when doing insight ability

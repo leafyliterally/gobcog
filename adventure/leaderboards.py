@@ -298,7 +298,8 @@ class LeaderboardCommands(AdventureMixin):
 
             for (vk, vi) in v.items():
                 if vk in ["weekly_score"]:
-                    if vi.get("week", -1) == current_week:
+                    has_score = vi.get(keyword, 0) > 0 or vi.get("rebirths", 0) > 0
+                    if vi.get("week", -1) == current_week and has_score:
                         for (s, sv) in vi.items():
                             if s in [keyword]:
                                 user_data.update(vi)

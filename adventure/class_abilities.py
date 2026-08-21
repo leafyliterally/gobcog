@@ -444,7 +444,7 @@ class ClassAbilities(AdventureMixin):
                 cooldown_time = int(c.heroclass["cooldown"])
                 return await smart_embed(
                     ctx,
-                    _("This command is on cooldown. Try again in {}.").format(f"<t:{cooldown_time}:R>"),
+                    _("This command is on cooldown. Try again {}.").format(f"<t:{cooldown_time}:R>"),
                 )
 
     @pet.command(name="free")
@@ -518,7 +518,7 @@ class ClassAbilities(AdventureMixin):
                         _(
                             "Your hero is currently recovering from the last time "
                             "they used this skill or they have just changed their heroclass. "
-                            "Try again in {}."
+                            "Try again {}."
                         ).format(f"<t:{cooldown_time}:R>"),
                     )
 
@@ -579,7 +579,7 @@ class ClassAbilities(AdventureMixin):
                             ctx,
                             _("{skill} {c} j wnf vxk vxmrorna rb jkxdc... fqjc lxdum rc vnjw?{skill}").format(
                                 c=bold(ctx.author.display_name),
-                                skill=self.emojis.skills.berserker,
+                                skill=self.emojis.skills.psychic,
                             ),
                         )
                     elif textroll == 2 or textroll == 5:
@@ -587,7 +587,7 @@ class ClassAbilities(AdventureMixin):
                             ctx,
                             _("{skill} {c} rb oxldbrwp xw cqn vxwbcna jqnjm...{skill}").format(
                                 c=bold(ctx.author.display_name),
-                                skill=self.emojis.skills.berserker,
+                                skill=self.emojis.skills.psychic,
                             ),
                         )
                     elif textroll == 3 or textroll == 6:
@@ -627,7 +627,7 @@ class ClassAbilities(AdventureMixin):
                             magic_roll = 0.8
                             diplo_roll = 0.4
 
-                        if roll == 1:
+                        if roll >= 0.98:
                             hp = session.monster_hp()
                             dipl = session.monster_dipl()
                             msg += _(
@@ -748,7 +748,7 @@ class ClassAbilities(AdventureMixin):
                     _(
                         "Your hero is currently recovering from the last time "
                         "they used this skill or they have just changed their heroclass. "
-                        "Try again in {}."
+                        "Try again {}."
                     ).format(f"<t:{cooldown_time}:R>"),
                 )
 
@@ -797,7 +797,7 @@ class ClassAbilities(AdventureMixin):
                         _(
                             "Your hero is currently recovering from the last time "
                             "they used this skill or they have just changed their heroclass. "
-                            "Try again in {}."
+                            "Try again {}."
                         ).format(f"<t:{cooldown_time}:R>"),
                     )
 
@@ -846,7 +846,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _(
                             "Your hero is currently recovering from the "
-                            "last time they used this skill. Try again in {}."
+                            "last time they used this skill. Try again {}."
                         ).format(f"<t:{cooldown_time}:R>"),
                     )
 
@@ -894,7 +894,7 @@ class ClassAbilities(AdventureMixin):
                         _(
                             "Your hero is currently recovering from the last time "
                             "they used this skill or they have just changed their heroclass. "
-                            "Try again in {}."
+                            "Try again {}."
                         ).format(f"<t:{cooldown_time}:R>"),
                     )
 
@@ -929,7 +929,7 @@ class ClassAbilities(AdventureMixin):
                     cooldown_time = int(c.heroclass["cooldown"])
                     return await smart_embed(
                         ctx,
-                        _("This command is on cooldown. Try again in {}").format(f"<t:{cooldown_time}:R>"),
+                        _("This command is on cooldown. Try again {}").format(f"<t:{cooldown_time}:R>"),
                     )
                 ascended_forge_msg = ""
                 ignored_rarities = {Rarities.forged, Rarities.set, Rarities.event}
