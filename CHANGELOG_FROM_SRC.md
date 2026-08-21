@@ -92,5 +92,5 @@ upstream. Listed oldest to newest.
 
 ## `latest`
 
-- Fixed `[p]adventure` crashing on a no-monster encounter.
-- Fixed leaderboards dropping real members (`[p]wscoreboard`, etc.) by guild chunking.
+- Fixed a crash that could end an adventure with no monster in it.
+- Fixed the weekly scoreboard: some players' weekly scores were stuck and never resetting, so they never showed up on the board even though they were active.
