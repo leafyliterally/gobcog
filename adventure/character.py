@@ -75,7 +75,7 @@ class CharacterCommands(AdventureMixin):
                         ),
                     )
                 view = ConfirmView(60, ctx.author)
-                await ctx.send(
+                msg = await ctx.send(
                     _(
                         "{author}, this will cost you at least {offering} {currency_name}.\n"
                         "You currently have {bal}. Do you want to proceed?"
@@ -106,7 +106,7 @@ class CharacterCommands(AdventureMixin):
                         ctx,
                         _("Don't play games with me, {}.").format(bold(ctx.author.display_name)),
                     )
-                await view.message.edit(view=None)
+                await msg.edit(view=None)
                 return
 
             if c.skill["pool"] <= 0:

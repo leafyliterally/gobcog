@@ -72,8 +72,13 @@ upstream. Listed oldest to newest.
   balanced-choice branches).
 - `[p]devrebirth` max character level raised 1000 → 2500.
 
-## `latest` — fix insight cooldown display and transcended reveal timing
+## `a726b5f` — fix insight timestamp cooldown, bug fix with adventure dispatch
 
 - `[p]insight`: cooldown message now shows the correct end time via discord timestamp; removed cooldown for insight.
 - Adventure dispatch event now correctly dispatch event in hard mode.
 - `_result()`: post-battle messages now show "Transcended" in hard mode whenever one occurs.
+
+## `latest`
+
+- Cooldown reduction for `[p]backpack eset` to 30s.
+- `[p]skill reset` confirmation buttons: fixed `AttributeError` on `view.message` that silently kept the Yes/No buttons stuck on the message.

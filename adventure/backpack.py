@@ -287,7 +287,7 @@ class BackPackCommands(AdventureMixin):
         await ctx.send(box(equip_msg, lang="ansi"))
 
     @_backpack.command(name="eset", cooldown_after_parsing=True)
-    @commands.cooldown(rate=1, per=600, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=30, type=commands.BucketType.user)
     async def backpack_eset(self, ctx: commands.Context, *, set_name: str):
         """Equip all parts of a set that you own."""
         if self.in_adventure(ctx):
