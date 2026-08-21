@@ -93,3 +93,4 @@ upstream. Listed oldest to newest.
 ## `latest`
 
 - Fixed `[p]adventure` crashing on a no-monster encounter.
+- Fixed leaderboards dropping real members (`[p]wscoreboard`, etc.) by guild chunking.

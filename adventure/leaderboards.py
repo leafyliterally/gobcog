@@ -28,6 +28,20 @@ log = logging.getLogger("red.cogs.adventure")
 class LeaderboardCommands(AdventureMixin):
     """This class will handle generating and posting leaerboard information"""
 
+    @staticmethod
+    async def _ensure_chunked(guild: discord.Guild):
+        """Chunk the guild if needed so guild.get_member() sees the full member list.
+
+        Without this, guild.get_member() silently returns None for real members who
+        simply aren't in the local cache yet, wrongly dropping them from leaderboards.
+        """
+        if guild.chunked:
+            return
+        try:
+            await guild.chunk()
+        except discord.ClientException:
+            log.warning("Could not chunk guild %s (missing members intent?)", guild.id)
+
     async def get_leaderboard(self, positions: int = None, guild: discord.Guild = None) -> List[tuple]:
         """Gets the Adventure's leaderboard.
 
@@ -46,6 +60,7 @@ class LeaderboardCommands(AdventureMixin):
         """
         raw_accounts = await self.config.all_users()
         if guild is not None:
+            await self._ensure_chunked(guild)
             tmp = raw_accounts.copy()
             for acc in tmp:
                 if not guild.get_member(acc):
@@ -119,6 +134,7 @@ class LeaderboardCommands(AdventureMixin):
             keyword = "wins"
         raw_accounts = await self.config.all_users()
         if guild is not None:
+            await self._ensure_chunked(guild)
             tmp = raw_accounts.copy()
             for acc in tmp:
                 if not guild.get_member(acc):
@@ -178,6 +194,7 @@ class LeaderboardCommands(AdventureMixin):
         """
         raw_accounts = await self.config.all_users()
         if guild is not None:
+            await self._ensure_chunked(guild)
             tmp = raw_accounts.copy()
             for acc in tmp:
                 if not guild.get_member(acc):
@@ -284,6 +301,7 @@ class LeaderboardCommands(AdventureMixin):
         keyword = "adventures"
         raw_accounts = await self.config.all_users()
         if guild is not None:
+            await self._ensure_chunked(guild)
             tmp = raw_accounts.copy()
             for acc in tmp:
                 if not guild.get_member(acc):
