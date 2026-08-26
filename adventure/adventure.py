@@ -2089,7 +2089,7 @@ class Adventure(
                     attack += pray_att_bonus
                     magic += pray_magic_bonus
                     diplomacy += pray_diplo_bonus
-                    if roll == 50:
+                    if roll_perc > 0.95:
                         roll_msg = _(
                             "{user} turned into an avatar of mighty {god}. "
                             "(+{len_f_list}{attack}/+{len_t_list}{talk}/+{len_m_list}{magic}) {roll_emoji}({roll})\n"
