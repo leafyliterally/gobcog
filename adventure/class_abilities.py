@@ -292,7 +292,7 @@ class ClassAbilities(AdventureMixin):
                         c.heroclass = classes[clz]
                         if c.heroclass["name"] in ["Wizard", "Cleric"]:
                             c.heroclass["cooldown"] = (
-                                max(300, (1200 - max((c.luck + c.total_int) * 2, 0))) + time.time()
+                                max(240, (1200 - max((c.luck + c.total_int) * 2, 0))) + time.time()
                             )
                         elif c.heroclass["name"] == "Ranger":
                             c.heroclass["cooldown"] = (
@@ -303,18 +303,18 @@ class ClassAbilities(AdventureMixin):
                             )
                         elif c.heroclass["name"] == "Berserker":
                             c.heroclass["cooldown"] = (
-                                max(300, (1200 - max((c.luck + c.total_att) * 2, 0))) + time.time()
+                                max(240, (1200 - max((c.luck + c.total_att) * 2, 0))) + time.time()
                             )
                         elif c.heroclass["name"] == "Bard":
                             c.heroclass["cooldown"] = (
-                                max(300, (1200 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
+                                max(240, (1200 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
                             )
                         elif c.heroclass["name"] == "Tinkerer":
                             c.heroclass["cooldown"] = (
                                 max(900, (3600 - max((c.luck + c.total_int) * 2, 0))) + time.time()
                             )
                         elif c.heroclass["name"] == "Psychic":
-                            c.heroclass["cooldown"] = max(300, (900 - max((c.luck - c.total_cha) * 2, 0))) + time.time()
+                            c.heroclass["cooldown"] = max(240, (900 - max((c.luck - c.total_cha) * 2, 0))) + time.time()
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         await self._clear_react(class_msg)
                         await class_msg.edit(content=box(now_class_msg, lang="css"))
@@ -578,7 +578,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_int) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
@@ -607,7 +607,6 @@ class ClassAbilities(AdventureMixin):
 
     @commands.command()
     @commands.guild_only()
-    @commands.cooldown(rate=1, per=30, type=commands.BucketType.user)
     async def insight(self, ctx: commands.Context):
         """[Psychic Class Only]
         This allows a Psychic to expose the current enemy's weakeness to the party.
@@ -640,10 +639,10 @@ class ClassAbilities(AdventureMixin):
                     ctx,
                     _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                 )
-            cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+            cooldown_time = max(240, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
-            if c.heroclass["cooldown"] + cooldown_time <= time.time():
+            if c.heroclass["cooldown"] <= time.time():
                 max_roll = 100 if c.rebirths >= 30 else 50 if c.rebirths >= 15 else 20
                 roll = random.randint(min(c.rebirths - 25 // 2, (max_roll // 2)), max_roll) / max_roll
                 if SESSION_ID in self._sessions and self._sessions[SESSION_ID].insight[0] < roll:
@@ -653,7 +652,7 @@ class ClassAbilities(AdventureMixin):
                     good = False
                     await smart_embed(ctx, _("Another hero has already done a better job than you."))
                 c.heroclass["ability"] = True
-                c.heroclass["cooldown"] = time.time()
+                c.heroclass["cooldown"] = time.time() + cooldown_time
                 async with self.get_lock(c.user):
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     textroll = random.randint(1, 6)
@@ -690,6 +689,7 @@ class ClassAbilities(AdventureMixin):
                         if roll >= 0.4:
                             msg += _("You are struggling to find anything in your current adventure.")
                     else:
+                        msg += _(f"With your power of insight, you have discovered: {self.emojis.dice}({roll})\n")
                         pdef = session.monster_modified_stats["pdef"]
                         mdef = session.monster_modified_stats["mdef"]
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
@@ -819,7 +819,7 @@ class ClassAbilities(AdventureMixin):
                     else:
                         return await smart_embed(ctx, _("You have failed to discover anything about this monster."))
             else:
-                cooldown_time = (c.heroclass["cooldown"]) + cooldown_time - time.time()
+                cooldown_time = c.heroclass["cooldown"] - time.time()
                 return await smart_embed(
                     ctx,
                     _(
@@ -855,7 +855,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_att) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_att) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
@@ -906,7 +906,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_int) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
@@ -957,7 +957,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_cha) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_cha) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
