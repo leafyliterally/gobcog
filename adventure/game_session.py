@@ -124,7 +124,7 @@ class SpecialActionButton(discord.ui.Button):
             await self.send_in_use(interaction)
             return
         else:
-            cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
+            cooldown_time = max(240, (1200 - max((c.luck + c.total_int) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
@@ -143,7 +143,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+        cooldown_time = max(240, (900 - max((c.luck + c.total_cha) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
@@ -154,7 +154,7 @@ class SpecialActionButton(discord.ui.Button):
                 good = True
             else:
                 good = False
-                msg = _("Another hero has already done a better job than you.")
+                msg = _(f"Another hero has already done a better job than you. {self.view.cog.emojis.dice}({int(round(roll * max_roll))})")
                 await smart_embed(
                     message=msg,
                     interaction=interaction,
@@ -194,7 +194,7 @@ class SpecialActionButton(discord.ui.Button):
                     if roll >= 0.4:
                         msg += _("You are struggling to find anything in your current adventure.")
                 else:
-                    msg += _(f"With your power of insight, you have discovered: {self.view.cog.emojis.dice}({roll})\n")
+                    msg += _(f"With your power of insight, you have discovered: {self.view.cog.emojis.dice}({int(round(roll * max_roll))})\n")
                     pdef = session.monster_modified_stats["pdef"]
                     mdef = session.monster_modified_stats["mdef"]
                     cdef = session.monster_modified_stats.get("cdef", 1.0)
@@ -352,7 +352,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"] is True:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (1200 - max((c.luck + c.total_att) * 2, 0)))
+        cooldown_time = max(240, (1200 - max((c.luck + c.total_att) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
@@ -376,7 +376,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"] is True:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
+        cooldown_time = max(240, (1200 - max((c.luck + c.total_int) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
@@ -401,7 +401,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (1200 - max((c.luck + c.total_cha) * 2, 0)))
+        cooldown_time = max(240, (1200 - max((c.luck + c.total_cha) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():

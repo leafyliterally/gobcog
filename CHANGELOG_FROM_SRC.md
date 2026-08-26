@@ -86,9 +86,16 @@ upstream. Listed oldest to newest.
 
 - Fixed the weekly scoreboard: some players' weekly scores were stuck and never resetting, so they never showed up on the board even though they were active.
 
-## `latest`
+## `ce99a96` — buff insight and minor hotfix to ui and calculation
 
 - Insight's team-wide bonus now kicks in on a great roll, not only a perfect one, so it triggers more often.
 - Fixed a mix-up where a mage's Insight bonus was boosting the party's melee damage instead of their magic damage.
 - Insight now tells you what roll you got when you use it.
 - Berserker's bonus damage now shows its own icon instead of a generic one, and no longer shows that icon twice in the battle report.
+
+## `latest`
+
+- Lowered the minimum cooldown for Insight, Rage, Focus, Music, and Bless to 4 minutes everywhere it's checked, so they're consistent.
+- Fixed Psychics getting an overly long cooldown right after switching to that class.
+- Insight now also tells you your roll when someone else already beat you to it.
+- Fixed Insight's roll messages showing a missing bracket, and sometimes an ugly long decimal instead of a clean number.

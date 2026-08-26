@@ -222,20 +222,20 @@ class ClassAbilities(AdventureMixin):
                         c.skill["pool"] = 0
                     c.heroclass = clz.to_json()
                     if c.hc in [HeroClasses.wizard, HeroClasses.cleric]:
-                        c.heroclass["cooldown"] = max(300, (1200 - max((c.luck + c.total_int) * 2, 0))) + time.time()
+                        c.heroclass["cooldown"] = max(240, (1200 - max((c.luck + c.total_int) * 2, 0))) + time.time()
                     elif c.hc is HeroClasses.ranger:
                         c.heroclass["cooldown"] = max(1800, (7200 - max(c.luck * 2 + c.total_int * 2, 0))) + time.time()
                         c.heroclass["catch_cooldown"] = (
                             max(600, (3600 - max(c.luck * 2 + c.total_int * 2, 0))) + time.time()
                         )
                     elif c.hc is HeroClasses.berserker:
-                        c.heroclass["cooldown"] = max(300, (1200 - max((c.luck + c.total_att) * 2, 0))) + time.time()
+                        c.heroclass["cooldown"] = max(240, (1200 - max((c.luck + c.total_att) * 2, 0))) + time.time()
                     elif c.hc is HeroClasses.bard:
-                        c.heroclass["cooldown"] = max(300, (1200 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
+                        c.heroclass["cooldown"] = max(240, (1200 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
                     elif c.hc is HeroClasses.tinkerer:
                         c.heroclass["cooldown"] = max(900, (3600 - max((c.luck + c.total_int) * 2, 0))) + time.time()
                     elif c.hc is HeroClasses.psychic:
-                        c.heroclass["cooldown"] = max(300, (900 - max((c.luck - c.total_cha) * 2, 0))) + time.time()
+                        c.heroclass["cooldown"] = max(240, (900 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
                     await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                     await self._clear_react(class_msg)
                     await class_msg.edit(content=box(now_class_msg, lang="ansi"), view=None)
@@ -497,7 +497,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_int) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
@@ -556,7 +556,7 @@ class ClassAbilities(AdventureMixin):
                     ctx,
                     _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                 )
-            cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+            cooldown_time = max(240, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
@@ -567,7 +567,7 @@ class ClassAbilities(AdventureMixin):
                     good = True
                 else:
                     good = False
-                    await smart_embed(ctx, _("Another hero has already done a better job than you."))
+                    await smart_embed(ctx, _(f"Another hero has already done a better job than you. {self.emojis.dice}({int(round(roll * max_roll))})"))
                 c.heroclass["ability"] = True
                 c.heroclass["cooldown"] = time.time() + cooldown_time
                 async with self.get_lock(c.user):
@@ -608,7 +608,7 @@ class ClassAbilities(AdventureMixin):
                         if roll >= 0.4:
                             msg += _("You are struggling to find anything in your current adventure.")
                     else:
-                        msg += _(f"With your power of insight, you have discovered: {self.emojis.dice}({roll})\n")
+                        msg += _(f"With your power of insight, you have discovered: {self.emojis.dice}({int(round(roll * max_roll))})\n")
                         pdef = session.monster_modified_stats["pdef"]
                         mdef = session.monster_modified_stats["mdef"]
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
@@ -777,7 +777,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_att) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_att) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
@@ -826,7 +826,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_int) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_int) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
@@ -875,7 +875,7 @@ class ClassAbilities(AdventureMixin):
                         ctx,
                         _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                     )
-                cooldown_time = max(300, (1200 - max((c.luck + c.total_cha) * 2, 0)))
+                cooldown_time = max(240, (1200 - max((c.luck + c.total_cha) * 2, 0)))
                 if "cooldown" not in c.heroclass:
                     c.heroclass["cooldown"] = cooldown_time + 1
                 if c.heroclass["cooldown"] <= time.time():
