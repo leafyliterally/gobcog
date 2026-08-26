@@ -2070,13 +2070,13 @@ class Adventure(
                     crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
                 if c.hc is HeroClasses.berserker and c.heroclass["ability"]:
                     base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
-                base_str = f"{self.emojis.crit}️ {humanize_number(base_bonus)}"
+                base_str = f"{self.emojis.berserk}️ {humanize_number(base_bonus)}"
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
                 report += (
                     f"{bold(user.display_name)}: "
                     f"{self.emojis.dice}({roll}) + "
-                    f"{self.emojis.berserk}{bonus} + "
+                    f"{bonus} + "
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                 )
             else:
@@ -2086,7 +2086,7 @@ class Adventure(
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                 )
-            if session.insight[0] == 1 and user.id != session.insight[1].user.id:
+            if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
                 attack += int(session.insight[1].total_att * 0.2)
         for user in magic_list:
             try:
@@ -2160,19 +2160,19 @@ class Adventure(
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.magic}{humanize_number(int_value)}\n"
                 )
-            if session.insight[0] == 1 and user.id != session.insight[1].user.id:
-                attack += int(session.insight[1].total_int * 0.2)
+            if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
+                magic += int(session.insight[1].total_int * 0.2)
         if fumble_count == len(attack_list):
             report += _("No one!")
         msg += report + "\n"
         for user in fumblelist:
             if user in session.fight:
-                if session.insight[0] == 1 and user.id != session.insight[1].user.id:
+                if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
                     attack -= int(session.insight[1].total_att * 0.2)
                 session.fight.remove(user)
             elif user in session.magic:
-                if session.insight[0] == 1 and user.id != session.insight[1].user.id:
-                    attack -= int(session.insight[1].total_int * 0.2)
+                if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
+                    magic -= int(session.insight[1].total_int * 0.2)
                 session.magic.remove(user)
         return (fumblelist, critlist, attack, magic, msg)
 
@@ -2396,14 +2396,14 @@ class Adventure(
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.talk}{humanize_number(dipl_value)}\n"
                 )
-            if session.insight[0] == 1 and user.id != session.insight[1].user.id:
+            if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
                 diplomacy += int(session.insight[1].total_cha * 0.2)
         if fumble_count == len(talk_list):
             report += _("No one!")
         msg = msg + report + "\n"
         for user in fumblelist:
             if user in talk_list:
-                if session.insight[0] == 1 and user.id != session.insight[1].user.id:
+                if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
                     diplomacy -= int(session.insight[1].total_cha * 0.2)
                 session.talk.remove(user)
         return (fumblelist, critlist, diplomacy, msg)

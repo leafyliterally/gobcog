@@ -7,90 +7,88 @@ upstream. Listed oldest to newest.
 
 ## `8cbf749` — various adjustment for ojf
 
-- Unified adventure timers to 3 minutes across boss/miniboss/normal (was 2/5 min split); updated
-  "Heroes have N minutes" copy to match.
-- Fixed Psychic insight's physical/magic/diplomacy roll-threshold mixup; added flavor text for
-  very high armour/magic/diplomacy resistance.
-- Psychic's "focusing on the monster ahead" line is now randomized across 3 variants.
-- Fixed pet-loyalty check wrongly factoring in intelligence/luck.
-- `[p]devrebirth` max rebirth level raised 100 → 250.
-- `[p]give loot` command: `users` converter narrowed to `discord.Member` only.
-- `[p]backpack set` uses proper title-casing (`_title_case`) instead of `.title()`.
-- Added new `adventuresync` cog (cross-server adventure-start notifications).
-- `.gitignore`: added `.DS_Store`, `__pycache__/`, `.vscode/`.
+- Adventure timers are now 3 minutes for every fight (used to be a mix of 2 and 5 minutes).
+- Fixed Insight sometimes revealing the wrong kind of weakness; added extra flavor text for very tough monsters.
+- Psychic's "focusing" message now has 3 different variations instead of always the same one.
+- Fixed pets losing loyalty for the wrong reasons.
+- Raised the rebirth cap for the dev rebirth command from 100 to 250.
+- The give-loot command can only target real Discord members now.
+- Backpack set names are now capitalized correctly.
+- Added a new feature that announces when an adventure starts across servers.
 
 ## `025ce14` — improvement for adv sync
 
-- `adventuresync` reads live `guild.name` instead of a hardcoded name in `LINKED_GUILDS`.
-- Cross-server alert embed gained a monster name callout and thumbnail (easy mode only).
+- Cross-server announcements now show each server's real current name instead of a fixed one.
+- The cross-server alert now shows the monster's name and picture (easy mode only).
 
 ## `4a77221` — adjust insight parameter
 
-- Insight's diplomacy-branch `physical_roll`/`magic_roll` tuned 0.6 → 0.7, in both
-  `class_abilities.py` and `game_session.py`.
+- Tuned how often Insight reveals a magic vs. a diplomacy weakness.
 
 ## `c100c1b` — change after adventure to global cooldown
 
-- Adventures are now global: `self._sessions` keyed by a fixed sentinel instead of per-guild, so
-  only one adventure runs bot-wide at a time. `GameSession.guild` kept for other cogs/dev tools.
-- Post-adventure cooldown moved from per-guild to global config.
-- Cooldown timestamp now recorded after loot distribution finishes, not right when the fight ends.
-- Merchant-cart spawn check stays guild-scoped (compares session's guild vs. message's guild).
-- `[p]adventureset advcooldown` is now owner-only (was admin) and works outside a guild.
+- Adventures are now shared across the whole bot instead of one per server, so only one adventure can happen at a time anywhere.
+- The cooldown between adventures is now shared bot-wide too, instead of per server.
+- The cooldown timer now starts after rewards are handed out, not the moment the fight ends.
+- The owner-only cooldown command now also works outside of a server.
 
 ## `44d005a` — fix false alarm on finished adv
 
-- Closed a race where a second `[p]adventure` could slip in while the first was still
-  mid-loot-distribution and stomp the in-flight session.
+- Fixed a bug where starting a new adventure right as the last one finished handing out rewards could break things.
 
 ## `79d9c61` — fix button order, add participant button, update advcooldown
 
-- Added ephemeral **Participants** button showing who picked fight/magic/talk/pray/run.
-- Fixed action button order (Magic before Talk).
-- `[p]adventureset advcooldown` min/default lowered 30s/10s (bug) → 5s/5s.
+- Added a private "Participants" button showing who chose fight, magic, talk, pray, or run.
+- Fixed the Magic and Talk buttons being in the wrong order.
+- Lowered the minimum and default adventure cooldown, which had been set too high by mistake.
 
 ## `18ed356` — safe pagify impl for dealing with ansi code block
 
-- Added `safe_pagify()` in `helpers.py`: keeps `` ``` `` code fences atomic across page breaks,
-  fixing long reward messages splitting mid-fence via Red's `pagify()`.
-- Swapped into both `_result()` pagify call sites that can contain the ANSI treasure-chest block.
+- Fixed long reward messages sometimes getting cut off in the middle of a decorated block, which made them look broken.
 
 ## `e951d76` — fix adventurestats breaking due to global adventure
 
-- `[p]adventurestats` still resolved sessions via `get_guild(server_id)`, which broke once the
-  session key became a fixed sentinel instead of a real guild ID.
-- Fixed to check the sentinel key directly and read `GameSession.guild.name` instead.
+- Fixed the adventure stats command crashing after adventures became shared across the whole bot.
 
 ## `51d71e4` — fix insight for global adventure
 
-- Fix `[p]insight` broken after global adventure edits.
+- Fixed Insight breaking after adventures became shared across the whole bot.
 
 ## `eaf34c1` — qol: update stats target xp to be max lvl instead of next lvl
 
-- Character sheet's target XP now shows the max-level XP requirement instead of next-level XP.
-- Insight's physical/magic/diplomacy roll thresholds retuned again (physical-choice and
-  balanced-choice branches).
-- `[p]devrebirth` max character level raised 1000 → 2500.
+- Your character sheet now shows the XP needed to reach the max level, not just the next level.
+- Retuned how often Insight reveals each type of weakness.
+- Raised the max character level allowed by the dev rebirth command.
 
 ## `a726b5f` — fix insight timestamp cooldown, bug fix with adventure dispatch
 
-- `[p]insight`: cooldown message now shows the correct end time via discord timestamp; removed cooldown for insight.
-- Adventure dispatch event now correctly dispatch event in hard mode.
-- `_result()`: post-battle messages now show "Transcended" in hard mode whenever one occurs.
+- Insight's cooldown message now shows the correct time it'll be ready again.
+- Fixed adventure announcements not firing correctly in hard mode.
+- Battle results now correctly show "Transcended" for tough monsters even outside easy mode.
 
 ## `ad67d81` — bp eset cd reduce and skill reset bug fix
 
-- Cooldown reduction for `[p]backpack eset` to 30s.
-- `[p]skill reset` confirmation buttons: fixed `AttributeError` on `view.message` that silently kept the Yes/No buttons stuck on the message.
+- Lowered the cooldown on equipping a full gear set.
+- Fixed the skill reset confirmation buttons getting stuck on screen after use.
 
 ## `dc17e8f` — wscoreboard fix attempt + cd sentence fix + insight buff
 
-- Fixed doubled "in" in 5 cooldown messages (Discord timestamp already says "in X").
-- `[p]wscoreboard` no longer lists users with a zero weekly score.
-- Increases `[p]insight` on transcended modifier
-- Change Insight icon when doing insight ability
+- Fixed cooldown messages awkwardly saying "in in 5 minutes."
+- The weekly scoreboard no longer shows players with a zero score for the week.
+- Buffed Insight's bonus against tough monsters.
+- Changed Insight's icon.
+
+## `2a90a9b` — fix adventure ascended iteration on no adventure
+
+- Fixed a crash that could end an adventure that had no monster in it.
+
+## `657458f` — fix wsc data stuck after 1 year of playing
+
+- Fixed the weekly scoreboard: some players' weekly scores were stuck and never resetting, so they never showed up on the board even though they were active.
 
 ## `latest`
 
-- Fixed a crash that could end an adventure with no monster in it.
-- Fixed the weekly scoreboard: some players' weekly scores were stuck and never resetting, so they never showed up on the board even though they were active.
+- Insight's team-wide bonus now kicks in on a great roll, not only a perfect one, so it triggers more often.
+- Fixed a mix-up where a mage's Insight bonus was boosting the party's melee damage instead of their magic damage.
+- Insight now tells you what roll you got when you use it.
+- Berserker's bonus damage now shows its own icon instead of a generic one, and no longer shows that icon twice in the battle report.
