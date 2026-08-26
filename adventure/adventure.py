@@ -1254,13 +1254,28 @@ class Adventure(
         fumblelist, attack, diplomacy, magic, pray_msg = await self.handle_pray(
             ctx.guild.id, fumblelist, attack, diplomacy, magic
         )
-        fumblelist, critlist, diplomacy, talk_msg = await self.handle_talk(
+        fumblelist, critlist, diplomacy, talk_msg, insight_diplo_bonus = await self.handle_talk(
             ctx.guild.id, fumblelist, critlist, diplomacy
         )
-        fumblelist, critlist, attack, magic, fight_msg = await self.handle_fight(
+        fumblelist, critlist, attack, magic, fight_msg, insight_attack_bonus, insight_magic_bonus = await self.handle_fight(
             ctx.guild.id, fumblelist, critlist, attack, magic
         )
-        result_msg = run_msg + pray_msg + talk_msg + fight_msg
+        insight_msg = ""
+        if session.insight[0] >= 0.95 and (insight_attack_bonus or insight_diplo_bonus or insight_magic_bonus):
+            insight_msg = _(
+                "{psychic}'s insight guided the party. "
+                "(+{attack_bonus}{attack}/+{diplo_bonus}{talk}/+{magic_bonus}{magic}) {skill}\n"
+            ).format(
+                psychic=bold(session.insight[1].user.display_name),
+                attack=self.emojis.attack,
+                talk=self.emojis.talk,
+                magic=self.emojis.magic,
+                attack_bonus=humanize_number(insight_attack_bonus),
+                diplo_bonus=humanize_number(insight_diplo_bonus),
+                magic_bonus=humanize_number(insight_magic_bonus),
+                skill=self.emojis.skills.psychic,
+            )
+        result_msg = run_msg + pray_msg + talk_msg + fight_msg + insight_msg
         challenge_attrib = session.attribute
         hp = max(
             int(session.monster_modified_stats["hp"] * self.ATTRIBS[challenge_attrib][0] * session.monster_stats), 1
@@ -1830,13 +1845,15 @@ class Adventure(
         mdef = max(session.monster_modified_stats["mdef"], 0.5)
 
         fumble_count = 0
+        insight_attack_bonus = 0
+        insight_magic_bonus = 0
         # make sure we pass this check first
         failed_emoji = self.emojis.fumble
         if len(attack_list) >= 1:
             msg = ""
             report = _("Attack Party: \n\n")
         else:
-            return (fumblelist, critlist, attack, magic, "")
+            return (fumblelist, critlist, attack, magic, "", 0, 0)
 
         for user in fight_list:
             try:
@@ -1912,7 +1929,9 @@ class Adventure(
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                 )
             if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                attack += int(session.insight[1].total_att * 0.2)
+                bonus = int(session.insight[1].total_att * 0.2)
+                attack += bonus
+                insight_attack_bonus += bonus
         for user in magic_list:
             try:
                 c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
@@ -1986,20 +2005,26 @@ class Adventure(
                     f"{self.emojis.magic}{humanize_number(int_value)}\n"
                 )
             if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                magic += int(session.insight[1].total_int * 0.2)
+                bonus = int(session.insight[1].total_int * 0.2)
+                magic += bonus
+                insight_magic_bonus += bonus
         if fumble_count == len(attack_list):
             report += _("No one!")
         msg += report + "\n"
         for user in fumblelist:
             if user in session.fight:
                 if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                    attack -= int(session.insight[1].total_att * 0.2)
+                    bonus = int(session.insight[1].total_att * 0.2)
+                    attack -= bonus
+                    insight_attack_bonus -= bonus
                 session.fight.remove(user)
             elif user in session.magic:
                 if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                    magic -= int(session.insight[1].total_int * 0.2)
+                    bonus = int(session.insight[1].total_int * 0.2)
+                    magic -= bonus
+                    insight_magic_bonus -= bonus
                 session.magic.remove(user)
-        return (fumblelist, critlist, attack, magic, msg)
+        return (fumblelist, critlist, attack, magic, msg, insight_attack_bonus, insight_magic_bonus)
 
     async def handle_pray(self, guild_id, fumblelist, attack, diplomacy, magic):
         session = self._sessions[self._SESSION_KEY]
@@ -2162,8 +2187,9 @@ class Adventure(
             report = _("Talking Party: \n\n")
             msg = ""
             fumble_count = 0
+            insight_diplo_bonus = 0
         else:
-            return (fumblelist, critlist, diplomacy, "")
+            return (fumblelist, critlist, diplomacy, "", 0)
         failed_emoji = self.emojis.fumble
         for user in talk_list:
             try:
@@ -2222,16 +2248,20 @@ class Adventure(
                     f"{self.emojis.talk}{humanize_number(dipl_value)}\n"
                 )
             if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                diplomacy += int(session.insight[1].total_cha * 0.2)
+                bonus = int(session.insight[1].total_cha * 0.2)
+                diplomacy += bonus
+                insight_diplo_bonus += bonus
         if fumble_count == len(talk_list):
             report += _("No one!")
         msg = msg + report + "\n"
         for user in fumblelist:
             if user in talk_list:
                 if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                    diplomacy -= int(session.insight[1].total_cha * 0.2)
+                    bonus = int(session.insight[1].total_cha * 0.2)
+                    diplomacy -= bonus
+                    insight_diplo_bonus -= bonus
                 session.talk.remove(user)
-        return (fumblelist, critlist, diplomacy, msg)
+        return (fumblelist, critlist, diplomacy, msg, insight_diplo_bonus)
 
     async def handle_basilisk(self, ctx: commands.Context):
         session = self._sessions[self._SESSION_KEY]
