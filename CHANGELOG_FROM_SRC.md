@@ -93,9 +93,13 @@ upstream. Listed oldest to newest.
 - Insight now tells you what roll you got when you use it.
 - Berserker's bonus damage now shows its own icon instead of a generic one, and no longer shows that icon twice in the battle report.
 
-## `latest`
+## `d7442d9` — reduce cd, fix insight cd
 
 - Lowered the minimum cooldown for Insight, Rage, Focus, Music, and Bless to 4 minutes everywhere it's checked, so they're consistent.
 - Fixed Psychics getting an overly long cooldown right after switching to that class.
 - Insight now also tells you your roll when someone else already beat you to it.
 - Fixed Insight's roll messages showing a missing bracket, and sometimes an ugly long decimal instead of a clean number.
+
+## `latest`
+
+- When Insight's bonus helps the party, a message now tells you who to thank and how much it boosted attack, talk, and magic by.
