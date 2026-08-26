@@ -1551,7 +1551,7 @@ class Adventure(
                 magic_bonus=humanize_number(insight_magic_bonus),
                 skill=self.emojis.skills.psychic,
             )
-        result_msg = run_msg + pray_msg + talk_msg + fight_msg + insight_msg
+        result_msg = run_msg + pray_msg + insight_msg + talk_msg + fight_msg
         hp = session.monster_hp()
         dipl = session.monster_dipl()
 
