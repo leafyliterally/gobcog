@@ -314,7 +314,7 @@ class ClassAbilities(AdventureMixin):
                                 max(900, (3600 - max((c.luck + c.total_int) * 2, 0))) + time.time()
                             )
                         elif c.heroclass["name"] == "Psychic":
-                            c.heroclass["cooldown"] = max(240, (900 - max((c.luck - c.total_cha) * 2, 0))) + time.time()
+                            c.heroclass["cooldown"] = max(240, (900 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         await self._clear_react(class_msg)
                         await class_msg.edit(content=box(now_class_msg, lang="css"))
@@ -650,7 +650,7 @@ class ClassAbilities(AdventureMixin):
                     good = True
                 else:
                     good = False
-                    await smart_embed(ctx, _("Another hero has already done a better job than you."))
+                    await smart_embed(ctx, _(f"Another hero has already done a better job than you. {self.emojis.dice}({int(round(roll * max_roll))})"))
                 c.heroclass["ability"] = True
                 c.heroclass["cooldown"] = time.time() + cooldown_time
                 async with self.get_lock(c.user):
@@ -689,7 +689,7 @@ class ClassAbilities(AdventureMixin):
                         if roll >= 0.4:
                             msg += _("You are struggling to find anything in your current adventure.")
                     else:
-                        msg += _(f"With your power of insight, you have discovered: {self.emojis.dice}({roll})\n")
+                        msg += _(f"With your power of insight, you have discovered: {self.emojis.dice}({int(round(roll * max_roll))})\n")
                         pdef = session.monster_modified_stats["pdef"]
                         mdef = session.monster_modified_stats["mdef"]
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
