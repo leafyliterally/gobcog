@@ -104,9 +104,13 @@ upstream. Listed oldest to newest.
 
 - When Insight's bonus helps the party, a message now tells you who to thank and how much it boosted attack, talk, and magic by.
 
-## `latest`
+## `b397bdd` — more insight adjustment
 
 - Top Insight rolls now show exact combat effectiveness instead of vague flavor text.
 - Insight's team bonus now scales with roll quality (8%-25%) instead of all-or-nothing, and triggers earlier.
 - The team bonus message now shows the roll that triggered it instead of an icon.
 - Tweak Insight messages.
+
+## `latest`
+
+- Insight's discovery message got a wording refresh.

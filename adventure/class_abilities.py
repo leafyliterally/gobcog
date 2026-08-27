@@ -608,7 +608,7 @@ class ClassAbilities(AdventureMixin):
                         if roll >= 0.4:
                             msg += _("You are struggling to find anything in your current adventure.")
                     else:
-                        msg += _(f"With your insight power, you spotted this monster's weakness. {self.emojis.dice}({int(round(roll * max_roll))})\n")
+                        msg += _(f"Your third eye reveals this monster's weakness. {self.emojis.dice}({int(round(roll * max_roll))})\n")
                         pdef = session.monster_modified_stats["pdef"]
                         mdef = session.monster_modified_stats["mdef"]
                         cdef = session.monster_modified_stats.get("cdef", 1.0)
@@ -686,8 +686,8 @@ class ClassAbilities(AdventureMixin):
                             real_mdef = max(mdef, 0.5)
                             real_cdef = max(cdef, 0.5)
                             msg += _(
-                                "Using blades will cut {pdef}x as effectively, while spells will surge with {mdef}x their usual power.\n"
-                                "Persuasive words will carry {cdef}x their normal weight against this monster.\n"
+                                "Using blades will cut **{pdef}x as effectively**, while spells will surge with **{mdef}x their usual power**.\n"
+                                "Persuasive words will carry **{cdef}x their normal weight** against this monster.\n"
                             ).format(
                                 pdef=round(1 / real_pdef, 2),
                                 mdef=round(1 / real_mdef, 2),
