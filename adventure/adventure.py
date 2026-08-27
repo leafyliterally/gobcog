@@ -1237,7 +1237,7 @@ class Adventure(
                 run_msg = _("It's a shame for the following adventurers...\n{run_msg}\n").format(run_msg=run_msg)
 
             output = _(
-                "All adventurers prepared for an epic adventure, but they soon realise all this treasure was unprotected!\n{run_msg}{text}"
+                "All adventurers prepared for an epic adventure, but they soon realized all the treasures were unprotected!\n{run_msg}{text}"
             ).format(
                 text=text,
                 run_msg=run_msg,
@@ -1265,7 +1265,7 @@ class Adventure(
             psychic_char = session.insight[1]
             insight_max_roll = 100 if psychic_char.rebirths >= 30 else 50 if psychic_char.rebirths >= 15 else 20
             insight_msg = _(
-                "{psychic}'s insight guided the party. "
+                "{psychic}'s helpful tips guided the party. "
                 "(+{attack_bonus}{attack}/+{diplo_bonus}{talk}/+{magic_bonus}{magic}) {roll_emoji}({roll})\n"
             ).format(
                 psychic=bold(psychic_char.user.display_name),
