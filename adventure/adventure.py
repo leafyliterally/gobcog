@@ -846,7 +846,7 @@ class Adventure(
         if easy_mode:
             if transcended:
                 # Shows Transcended on Easy mode
-                new_challenge = _("Transcended {}").format(challenge.replace("Ascended", ""))
+                new_challenge = _("Transcended {}").format(challenge.replace("Ascended ", ""))
             no_monster = False
             if monster_roster[challenge]["boss"]:
                 timer = 60 * 3
@@ -868,7 +868,7 @@ class Adventure(
         else:
             if transcended:
                 # Hide Transcended on Easy mode
-                new_challenge = challenge.replace("Ascended", "")
+                new_challenge = challenge.replace("Ascended ", "")
             timer = 60 * 3
             no_monster = random.randint(0, 100) == 25
         self._sessions[self._SESSION_KEY] = GameSession(
@@ -1261,19 +1261,22 @@ class Adventure(
             ctx.guild.id, fumblelist, critlist, attack, magic
         )
         insight_msg = ""
-        if session.insight[0] >= 0.95 and (insight_attack_bonus or insight_diplo_bonus or insight_magic_bonus):
+        if session.insight[0] >= 0.90 and (insight_attack_bonus or insight_diplo_bonus or insight_magic_bonus):
+            psychic_char = session.insight[1]
+            insight_max_roll = 100 if psychic_char.rebirths >= 30 else 50 if psychic_char.rebirths >= 15 else 20
             insight_msg = _(
                 "{psychic}'s insight guided the party. "
-                "(+{attack_bonus}{attack}/+{diplo_bonus}{talk}/+{magic_bonus}{magic}) {skill}\n"
+                "(+{attack_bonus}{attack}/+{diplo_bonus}{talk}/+{magic_bonus}{magic}) {roll_emoji}({roll})\n"
             ).format(
-                psychic=bold(session.insight[1].user.display_name),
+                psychic=bold(psychic_char.user.display_name),
                 attack=self.emojis.attack,
                 talk=self.emojis.talk,
                 magic=self.emojis.magic,
                 attack_bonus=humanize_number(insight_attack_bonus),
                 diplo_bonus=humanize_number(insight_diplo_bonus),
                 magic_bonus=humanize_number(insight_magic_bonus),
-                skill=self.emojis.skills.psychic,
+                roll_emoji=self.emojis.dice,
+                roll=int(round(session.insight[0] * insight_max_roll)),
             )
         result_msg = run_msg + pray_msg + insight_msg + talk_msg + fight_msg
         challenge_attrib = session.attribute
@@ -1928,8 +1931,8 @@ class Adventure(
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.attack}{str(humanize_number(att_value))}\n"
                 )
-            if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                bonus = int(session.insight[1].total_att * 0.2)
+            if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
+                bonus = int(session.insight[1].total_att * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                 attack += bonus
                 insight_attack_bonus += bonus
         for user in magic_list:
@@ -2004,8 +2007,8 @@ class Adventure(
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.magic}{humanize_number(int_value)}\n"
                 )
-            if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                bonus = int(session.insight[1].total_int * 0.2)
+            if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
+                bonus = int(session.insight[1].total_int * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                 magic += bonus
                 insight_magic_bonus += bonus
         if fumble_count == len(attack_list):
@@ -2013,14 +2016,14 @@ class Adventure(
         msg += report + "\n"
         for user in fumblelist:
             if user in session.fight:
-                if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                    bonus = int(session.insight[1].total_att * 0.2)
+                if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
+                    bonus = int(session.insight[1].total_att * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                     attack -= bonus
                     insight_attack_bonus -= bonus
                 session.fight.remove(user)
             elif user in session.magic:
-                if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                    bonus = int(session.insight[1].total_int * 0.2)
+                if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
+                    bonus = int(session.insight[1].total_int * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                     magic -= bonus
                     insight_magic_bonus -= bonus
                 session.magic.remove(user)
@@ -2247,8 +2250,8 @@ class Adventure(
                     f"{self.emojis.dice}({roll}) + "
                     f"{self.emojis.talk}{humanize_number(dipl_value)}\n"
                 )
-            if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                bonus = int(session.insight[1].total_cha * 0.2)
+            if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
+                bonus = int(session.insight[1].total_cha * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                 diplomacy += bonus
                 insight_diplo_bonus += bonus
         if fumble_count == len(talk_list):
@@ -2256,8 +2259,8 @@ class Adventure(
         msg = msg + report + "\n"
         for user in fumblelist:
             if user in talk_list:
-                if session.insight[0] >= 0.95 and user.id != session.insight[1].user.id:
-                    bonus = int(session.insight[1].total_cha * 0.2)
+                if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
+                    bonus = int(session.insight[1].total_cha * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                     diplomacy -= bonus
                     insight_diplo_bonus -= bonus
                 session.talk.remove(user)
