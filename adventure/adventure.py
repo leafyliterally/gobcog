@@ -163,6 +163,8 @@ class Adventure(
 
         self._adventure_countdown = {}
         self._rewards = {}
+        self._char_cache = {}
+        self._bg_tasks: set = set()
         self._reward_message = {}
         self._loss_message = {}
         self._trader_countdown = {}
@@ -482,6 +484,25 @@ class Adventure(
             self.locks[member.id] = asyncio.Lock()
         return self.locks[member.id]
 
+    def save_character_in_background(self, user: discord.User, data: dict) -> None:
+        """Persist a character's data without making the caller wait on the write.
+
+        Use only where nothing after the call needs the write to have completed
+        (e.g. no re-read of config, and no other queued write for the same user
+        that must land after this one).
+        """
+
+        task = self.bot.loop.create_task(self.config.user(user).set(data))
+        self._bg_tasks.add(task)
+
+        def _on_done(t: asyncio.Task):
+            self._bg_tasks.discard(t)
+            exc = t.exception() if not t.cancelled() else None
+            if exc:
+                log.exception("Error saving character data in the background", exc_info=exc)
+
+        task.add_done_callback(_on_done)
+
     async def _garbage_collection(self):
         await self.bot.wait_until_red_ready()
         delta = timedelta(minutes=6)
@@ -573,33 +594,33 @@ class Adventure(
             return
         reward_copy = reward.copy()
         send_message = ""
-        for (userid, rewards) in reward_copy.items():
-            if rewards:
-                user = ctx.guild.get_member(userid)  # bot.get_user breaks sometimes :ablobsweats:
-                if user is None:
-                    # sorry no rewards if you leave the server
-                    continue
-                msg = await self._add_rewards(ctx, user, rewards["xp"], rewards["cp"], rewards["special"])
-                if msg:
-                    send_message += f"{msg}\n"
-                self._rewards[userid] = {}
-        if send_message:
-            for page in pagify(send_message):
-                await smart_embed(ctx, page, success=True)
         if participants:
-            for user in participants:  # reset activated abilities
+            for user in participants:  # grant rewards, reset activated abilities, one write each
                 async with self.get_lock(user):
-                    try:
-                        c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-                    except Exception as exc:
-                        log.exception("Error with the new character sheet", exc_info=exc)
+                    c = self._char_cache.get(user)
+                    if c is None:
                         continue
+                    rewards = reward_copy.get(user.id)
+                    if rewards:
+                        member = ctx.guild.get_member(user.id)  # bot.get_user breaks sometimes :ablobsweats:
+                        if member is not None:
+                            msg = await self._add_rewards(ctx, member, c, rewards["xp"], rewards["cp"], rewards["special"])
+                            if msg:
+                                send_message += f"{msg}\n"
+                            self._rewards[user.id] = {}
+                        # sorry no rewards if you leave the server
                     if c.heroclass["name"] != "Ranger" and c.heroclass["ability"]:
                         c.heroclass["ability"] = False
                     if c.last_currency_check + 600 < time.time() or c.bal > c.last_known_currency:
                         c.last_known_currency = await bank.get_balance(user)
                         c.last_currency_check = time.time()
-                    await self.config.user(user).set(await c.to_json(ctx, self.config))
+            cached_items = list(self._char_cache.items())
+            json_data = await asyncio.gather(*(c.to_json(ctx, self.config) for _, c in cached_items))
+            await asyncio.gather(*(self.config.user(u).set(d) for (u, _), d in zip(cached_items, json_data)))
+        self._char_cache = {}
+        if send_message:
+            for page in pagify(send_message):
+                await smart_embed(ctx, page, success=True)
         if ctx.message.id in self._reward_message:
             extramsg = self._reward_message.pop(ctx.message.id)
             if extramsg:
@@ -1155,6 +1176,19 @@ class Adventure(
         self._sessions[self._SESSION_KEY].pray = pray_list
         self._sessions[self._SESSION_KEY].run = run_list
         self._sessions[self._SESSION_KEY].magic = magic_list
+
+        all_participants = list(set(fight_list + magic_list + talk_list + pray_list + run_list))
+        fetched_characters = await asyncio.gather(
+            *(Character.from_json(ctx, self.config, u, self._daily_bonus) for u in all_participants),
+            return_exceptions=True,
+        )
+        self._char_cache = {}
+        for u, c in zip(all_participants, fetched_characters):
+            if isinstance(c, Exception):
+                log.exception("Error with the new character sheet", exc_info=c)
+                continue
+            self._char_cache[u] = c
+
         fight_name_list = []
         wizard_name_list = []
         talk_name_list = []
@@ -1216,10 +1250,8 @@ class Adventure(
             parsed_users = []
             for (action_name, action) in participants.items():
                 for user in action:
-                    try:
-                        c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-                    except Exception as exc:
-                        log.exception("Error with the new character sheet", exc_info=exc)
+                    c = self._char_cache.get(user)
+                    if c is None:
                         continue
                     current_val = c.adventures.get(action_name, 0)
                     c.adventures.update({action_name: current_val + 1})
@@ -1229,7 +1261,6 @@ class Adventure(
                         c.adventures.update({special_action: current_val + 1})
                         c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                         parsed_users.append(user)
-                    await self.config.user(user).set(await c.to_json(ctx, self.config))
             attack, diplomacy, magic, run_msg = await self.handle_run(
                 ctx.guild.id, attack, diplomacy, magic, shame=True
             )
@@ -1448,10 +1479,8 @@ class Adventure(
                 ctx.guild,
             )
             for user in session.participants:
-                try:
-                    c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-                except Exception as exc:
-                    log.exception("Error with the new character sheet", exc_info=exc)
+                c = self._char_cache.get(user)
+                if c is None:
                     continue
                 if c.bal > 0:
                     multiplier = 1 / 3 if c.rebirths >= 10 else 0.01
@@ -1471,7 +1500,6 @@ class Adventure(
                             await bank.set_balance(user, 0)
                 c.adventures.update({"loses": c.adventures.get("loses", 0) + 1})
                 c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
-                await self.config.user(user).set(await c.to_json(ctx, self.config))
             loss_list = []
             result_msg += session.miniboss["defeat"]
             if len(repair_list) > 0:
@@ -1809,10 +1837,8 @@ class Adventure(
         parsed_users = []
         for (action_name, action) in participants.items():
             for user in action:
-                try:
-                    c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-                except Exception as exc:
-                    log.exception("Error with the new character sheet", exc_info=exc)
+                c = self._char_cache.get(user)
+                if c is None:
                     continue
                 current_val = c.adventures.get(action_name, 0)
                 c.adventures.update({action_name: current_val + 1})
@@ -1822,7 +1848,6 @@ class Adventure(
                     c.adventures.update({special_action: current_val + 1})
                     c.weekly_score.update({"adventures": c.weekly_score.get("adventures", 0) + 1})
                     parsed_users.append(user)
-                await self.config.user(user).set(await c.to_json(ctx, self.config))
 
     async def handle_run(self, guild_id, attack, diplomacy, magic, shame=False):
         runners = []
@@ -1859,10 +1884,8 @@ class Adventure(
             return (fumblelist, critlist, attack, magic, "", 0, 0)
 
         for user in fight_list:
-            try:
-                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
+            c = self._char_cache.get(user)
+            if c is None:
                 continue
             crit_mod = max(max(c.dex, c.luck // 2) + (c.total_att // 20), 0)  # Thanks GoaFan77
             mod = 0
@@ -1936,10 +1959,8 @@ class Adventure(
                 attack += bonus
                 insight_attack_bonus += bonus
         for user in magic_list:
-            try:
-                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
+            c = self._char_cache.get(user)
+            if c is None:
                 continue
             crit_mod = max(max(c.dex, c.luck // 2) + (c.total_int // 20), 0)
             mod = 0
@@ -2020,13 +2041,17 @@ class Adventure(
                     bonus = int(session.insight[1].total_att * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                     attack -= bonus
                     insight_attack_bonus -= bonus
-                session.fight.remove(user)
+                # Kept in session.fight (not removed) so fumblers stay treated like every
+                # other participant until rewards are fully distributed, instead of being
+                # freed from in_adventure()/the restrict check early.
             elif user in session.magic:
                 if session.insight[0] >= 0.90 and user.id != session.insight[1].user.id:
                     bonus = int(session.insight[1].total_int * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                     magic -= bonus
                     insight_magic_bonus -= bonus
-                session.magic.remove(user)
+                # Kept in session.magic (not removed) so fumblers stay treated like every
+                # other participant until rewards are fully distributed, instead of being
+                # freed from in_adventure()/the restrict check early.
         return (fumblelist, critlist, attack, magic, msg, insight_attack_bonus, insight_magic_bonus)
 
     async def handle_pray(self, guild_id, fumblelist, attack, diplomacy, magic):
@@ -2043,10 +2068,8 @@ class Adventure(
         msg = ""
         failed_emoji = self.emojis.fumble
         for user in pray_list:
-            try:
-                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
+            c = self._char_cache.get(user)
+            if c is None:
                 continue
             rebirths = c.rebirths * (2 if c.heroclass["name"] == "Cleric" else 1)
             if c.heroclass["name"] == "Cleric":
@@ -2195,10 +2218,8 @@ class Adventure(
             return (fumblelist, critlist, diplomacy, "", 0)
         failed_emoji = self.emojis.fumble
         for user in talk_list:
-            try:
-                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
+            c = self._char_cache.get(user)
+            if c is None:
                 continue
             crit_mod = max(max(c.dex, c.luck // 2) + (c.total_int // 50) + (c.total_cha // 20), 0)
             mod = 0
@@ -2263,7 +2284,9 @@ class Adventure(
                     bonus = int(session.insight[1].total_cha * (0.08 + 1.7 * (session.insight[0] - 0.9)))
                     diplomacy -= bonus
                     insight_diplo_bonus -= bonus
-                session.talk.remove(user)
+                # Kept in session.talk (not removed) so fumblers stay treated like every
+                # other participant until rewards are fully distributed, instead of being
+                # freed from in_adventure()/the restrict check early.
         return (fumblelist, critlist, diplomacy, msg, insight_diplo_bonus)
 
     async def handle_basilisk(self, ctx: commands.Context):
@@ -2284,10 +2307,8 @@ class Adventure(
                 failed = False
             else:
                 for user in participants:  # check if any fighter has an equipped mirror shield to give them a chance.
-                    try:
-                        c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-                    except Exception as exc:
-                        log.exception("Error with the new character sheet", exc_info=exc)
+                    c = self._char_cache.get(user)
+                    if c is None:
                         continue
                     if any(x in c.sets for x in ["The Supreme One", "Ainz Ooal Gown"]):
                         failed = False
@@ -2303,85 +2324,71 @@ class Adventure(
             failed = False
         return failed
 
-    async def _add_rewards(self, ctx: commands.Context, user, exp, cp, special):
-        lock = self.get_lock(user)
-        if not lock.locked():
-            await lock.acquire()
-        try:
-            c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-        except Exception as exc:
-            log.exception("Error with the new character sheet", exc_info=exc)
-            lock.release()
-            return
-        else:
-            rebirth_text = ""
-            c.exp += exp
-            member = ctx.guild.get_member(user.id)
-            cp = max(cp, 0)
-            if cp > 0:
-                try:
-                    await bank.deposit_credits(member, cp)
-                except BalanceTooHigh as e:
-                    await bank.set_balance(member, e.max_balance)
-            extra = ""
-            rebirthextra = ""
-            lvl_start = c.lvl
-            lvl_end = int(max(c.exp, 0) ** (1 / 3.5))
-            lvl_end = lvl_end if lvl_end < c.maxlevel else c.maxlevel
-            levelup_emoji = self.emojis.level_up
-            rebirth_emoji = self.emojis.rebirth
-            if lvl_end >= c.maxlevel:
-                rebirthextra = _("{} You can now rebirth {}").format(rebirth_emoji, user.mention)
-            if lvl_start < lvl_end:
-                # recalculate free skillpoint pool based on new level and already spent points.
-                c.lvl = lvl_end
-                assigned_stats = c.skill["att"] + c.skill["cha"] + c.skill["int"]
-                starting_points = await calculate_sp(lvl_start, c) + assigned_stats
-                ending_points = await calculate_sp(lvl_end, c) + assigned_stats
+    async def _add_rewards(self, ctx: commands.Context, user, c, exp, cp, special):
+        # Caller holds self.get_lock(user) and persists `c` in one combined write afterward.
+        rebirth_text = ""
+        c.exp += exp
+        member = ctx.guild.get_member(user.id)
+        cp = max(cp, 0)
+        if cp > 0:
+            try:
+                await bank.deposit_credits(member, cp)
+            except BalanceTooHigh as e:
+                await bank.set_balance(member, e.max_balance)
+        extra = ""
+        rebirthextra = ""
+        lvl_start = c.lvl
+        lvl_end = int(max(c.exp, 0) ** (1 / 3.5))
+        lvl_end = lvl_end if lvl_end < c.maxlevel else c.maxlevel
+        levelup_emoji = self.emojis.level_up
+        rebirth_emoji = self.emojis.rebirth
+        if lvl_end >= c.maxlevel:
+            rebirthextra = _("{} You can now rebirth {}").format(rebirth_emoji, user.mention)
+        if lvl_start < lvl_end:
+            # recalculate free skillpoint pool based on new level and already spent points.
+            c.lvl = lvl_end
+            assigned_stats = c.skill["att"] + c.skill["cha"] + c.skill["int"]
+            starting_points = await calculate_sp(lvl_start, c) + assigned_stats
+            ending_points = await calculate_sp(lvl_end, c) + assigned_stats
 
-                if c.skill["pool"] < 0:
-                    c.skill["pool"] = 0
-                c.skill["pool"] += ending_points - starting_points
-                if c.skill["pool"] > 0:
-                    extra = _(" You have {} skill points available.").format(bold(str(c.skill["pool"])))
-                rebirth_text = _("{} {} is now level {}!{}\n{}").format(
-                    levelup_emoji, user.mention, bold(str(lvl_end)), extra, rebirthextra
-                )
-            if c.rebirths > 1:
-                roll = random.randint(1, 100)
-                if lvl_end == c.maxlevel:
-                    roll += random.randint(50, 100)
-                if special is False:
-                    special = [0, 0, 0, 0, 0, 0]
-                    if c.rebirths > 1 and roll < 50:
-                        special[0] += 1
-                    if c.rebirths > 5 and roll < 30:
-                        special[1] += 1
-                    if c.rebirths > 10 > roll:
-                        special[2] += 1
-                    if c.rebirths > 15 and roll < 5:
-                        special[3] += 1
-                    if special == [0, 0, 0, 0, 0, 0]:
-                        special = False
-                else:
-                    if c.rebirths > 1 and roll < 50:
-                        special[0] += 1
-                    if c.rebirths > 5 and roll < 30:
-                        special[1] += 1
-                    if c.rebirths > 10 > roll:
-                        special[2] += 1
-                    if c.rebirths > 15 and roll < 5:
-                        special[3] += 1
-                    if special == [0, 0, 0, 0, 0, 0]:
-                        special = False
-            if special is not False:
-                c.treasure = [sum(x) for x in zip(c.treasure, special)]
-            await self.config.user(user).set(await c.to_json(ctx, self.config))
-            return rebirth_text
-        finally:
-            lock = self.get_lock(user)
-            with contextlib.suppress(Exception):
-                lock.release()
+            if c.skill["pool"] < 0:
+                c.skill["pool"] = 0
+            c.skill["pool"] += ending_points - starting_points
+            if c.skill["pool"] > 0:
+                extra = _(" You have {} skill points available.").format(bold(str(c.skill["pool"])))
+            rebirth_text = _("{} {} is now level {}!{}\n{}").format(
+                levelup_emoji, user.mention, bold(str(lvl_end)), extra, rebirthextra
+            )
+        if c.rebirths > 1:
+            roll = random.randint(1, 100)
+            if lvl_end == c.maxlevel:
+                roll += random.randint(50, 100)
+            if special is False:
+                special = [0, 0, 0, 0, 0, 0]
+                if c.rebirths > 1 and roll < 50:
+                    special[0] += 1
+                if c.rebirths > 5 and roll < 30:
+                    special[1] += 1
+                if c.rebirths > 10 > roll:
+                    special[2] += 1
+                if c.rebirths > 15 and roll < 5:
+                    special[3] += 1
+                if special == [0, 0, 0, 0, 0, 0]:
+                    special = False
+            else:
+                if c.rebirths > 1 and roll < 50:
+                    special[0] += 1
+                if c.rebirths > 5 and roll < 30:
+                    special[1] += 1
+                if c.rebirths > 10 > roll:
+                    special[2] += 1
+                if c.rebirths > 15 and roll < 5:
+                    special[3] += 1
+                if special == [0, 0, 0, 0, 0, 0]:
+                    special = False
+        if special is not False:
+            c.treasure = [sum(x) for x in zip(c.treasure, special)]
+        return rebirth_text
 
     async def _adv_countdown(self, ctx: commands.Context, seconds, title) -> asyncio.Task:
         await self._data_check(ctx)
@@ -2554,10 +2561,8 @@ class Adventure(
             session_bonus = 0
         async for user in AsyncIter(userlist, steps=100):
             self._rewards[user.id] = {}
-            try:
-                c = await Character.from_json(ctx, self.config, user, self._daily_bonus)
-            except Exception as exc:
-                log.exception("Error with the new character sheet", exc_info=exc)
+            c = self._char_cache.get(user)
+            if c is None:
                 continue
             userxp = int(xp + (xp * 0.5 * c.rebirths) + max((xp * 0.1 * min(250, c._int / 10)), 0))
             usercp = int(cp + max((cp * 0.1 * min(1000, (c._luck + c._att) / 10)), 0))
@@ -2600,7 +2605,7 @@ class Adventure(
                 self._rewards[user.id]["xp"] = userxp
                 self._rewards[user.id]["cp"] = usercp
             if special is not False:
-                self._rewards[user.id]["special"] = special
+                self._rewards[user.id]["special"] = list(special)
             else:
                 self._rewards[user.id]["special"] = False
             rewards_list.append(f"{bold(user.display_name)}")

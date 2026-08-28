@@ -168,7 +168,7 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def _add_rewards(self, ctx: commands.Context, user, exp, cp, special):
+    async def _add_rewards(self, ctx: commands.Context, user, c, exp, cp, special):
         raise NotImplementedError()
 
     @abstractmethod

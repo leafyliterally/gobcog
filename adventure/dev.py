@@ -156,7 +156,8 @@ class DevCommands(AdventureMixin):
                         lang="css",
                     )
                 )
-            await self._add_rewards(ctx, target, int((character_level) ** 3.5) + 1, 0, False)
+                await self._add_rewards(ctx, target, c, int((character_level) ** 3.5) + 1, 0, False)
+                await self.config.user(target).set(await c.to_json(ctx, self.config))
         await ctx.tick()
 
     @commands.command()

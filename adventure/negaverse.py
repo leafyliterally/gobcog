@@ -252,9 +252,10 @@ class Negaverse(AdventureMixin):
                         currency_name=currency_name,
                     )
                 )
+                msg = await self._add_rewards(ctx, ctx.author, character, xp_won, offering, False)
+                await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 with contextlib.suppress(Exception):
                     lock.release()
-                msg = await self._add_rewards(ctx, ctx.author, xp_won, offering, False)
                 xp_won_final += xp_won
                 offering_value += offering
                 winning_state = True
@@ -276,9 +277,10 @@ class Negaverse(AdventureMixin):
                         xp_gain=humanize_number(xp_won),
                     )
                 )
+                msg = await self._add_rewards(ctx, ctx.author, character, xp_won, 0, False)
+                await self.config.user(ctx.author).set(await character.to_json(ctx, self.config))
                 with contextlib.suppress(Exception):
                     lock.release()
-                msg = await self._add_rewards(ctx, ctx.author, xp_won, 0, False)
                 xp_won_final += xp_won
                 offering_value += offering
                 winning_state = True
