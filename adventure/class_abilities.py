@@ -314,7 +314,7 @@ class ClassAbilities(AdventureMixin):
                                 max(900, (3600 - max((c.luck + c.total_int) * 2, 0))) + time.time()
                             )
                         elif c.heroclass["name"] == "Psychic":
-                            c.heroclass["cooldown"] = max(240, (900 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
+                            c.heroclass["cooldown"] = max(300, (900 - max((c.luck + c.total_cha) * 2, 0))) + time.time()
                         await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
                         await self._clear_react(class_msg)
                         await class_msg.edit(content=box(now_class_msg, lang="css"))
@@ -639,7 +639,7 @@ class ClassAbilities(AdventureMixin):
                     ctx,
                     _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                 )
-            cooldown_time = max(240, (900 - max((c.luck + c.total_cha) * 2, 0)))
+            cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
