@@ -115,9 +115,13 @@ upstream. Listed oldest to newest.
 
 - Insight's discovery message got a wording refresh.
 
-## `latest`
+## `3842ba3` - adventure optimization
 
 - Speed up how quickly adventure rewards show up after a fight, by reading and saving each player's character data once instead of several times over.
 - Fixed a bug where bonus treasure chests earned by a high-rebirth player could accidentally get added to other party members' chests too, instead of just their own.
 - Bless, Insight, Rage, Focus, and Music now respond faster with character data saved in the background.
 - Apply fixes to `dev.py` and `negaverse.py` as an impact on adventure optimization
+
+# `latest`
+- Great Insight rolls now show HP or diplomacy at random, instead of always HP.
+- Excellent Insight rolls now reveal exact numbers for only 1-2 of the monster's weaknesses, not all three.

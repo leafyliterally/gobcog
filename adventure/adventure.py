@@ -2110,10 +2110,10 @@ class Adventure(
                     msg += _("{user} landed a critical hit.\n").format(user=bold(user.display_name))
                     critlist.append(user)
                     crit_bonus = (session.rng.randint(5, 20)) + (rebirths * 2)
-                    crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
+                    crit_str = f"{self.emojis.crit}{humanize_number(crit_bonus)}"
                 if c.hc is HeroClasses.berserker and c.heroclass["ability"]:
                     base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
-                base_str = f"{self.emojis.berserk}️ {humanize_number(base_bonus)}"
+                base_str = f"{self.emojis.berserk}️{humanize_number(base_bonus)}"
                 attack += int((roll + base_bonus + crit_bonus + att_value) / pdef)
                 bonus = base_str + crit_str
                 report += (
@@ -2184,10 +2184,10 @@ class Adventure(
                     msg += _("{} had a surge of energy.\n").format(bold(user.display_name))
                     critlist.append(user)
                     crit_bonus = (session.rng.randint(5, 20)) + (rebirths * 2)
-                    crit_str = f"{self.emojis.crit} {humanize_number(crit_bonus)}"
+                    crit_str = f"{self.emojis.crit}{humanize_number(crit_bonus)}"
                 if c.hc is HeroClasses.wizard and c.heroclass["ability"]:
                     base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
-                    base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
+                    base_str = f"{self.emojis.magic_crit}️{humanize_number(base_bonus)}"
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
                 report += (
@@ -2407,7 +2407,7 @@ class Adventure(
                 if c.hc is HeroClasses.bard and c.heroclass["ability"]:
                     bonus = session.rng.randint(5, 15)
                     diplomacy += int((roll - bonus + dipl_value + rebirths) / cdef)
-                    report += f"{bold(user.display_name)} " f"🎲({roll}) +💥{bonus} +🗨{humanize_number(dipl_value)} | "
+                    report += f"{bold(user.display_name)} " f"🎲({roll}) + 💥{bonus} + 🗨{humanize_number(dipl_value)} | "
                 else:
                     msg += _("{}{} accidentally offended the enemy.\n").format(failed_emoji, bold(user.display_name))
                     fumblelist.append(user)
@@ -2420,11 +2420,11 @@ class Adventure(
                     msg += _("{} made a compelling argument.\n").format(bold(user.display_name))
                     critlist.append(user)
                     crit_bonus = (session.rng.randint(5, 20)) + (rebirths * 2)
-                    crit_str = f"{self.emojis.crit} {crit_bonus}"
+                    crit_str = f"{self.emojis.crit}{crit_bonus}"
 
                 if c.hc is HeroClasses.bard and c.heroclass["ability"]:
                     base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
-                base_str = f"🎵 {humanize_number(base_bonus)}"
+                base_str = f"🎵{humanize_number(base_bonus)}"
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
                 bonus = base_str + crit_str
                 report += (

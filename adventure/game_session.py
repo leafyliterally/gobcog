@@ -143,7 +143,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(240, (900 - max((c.luck + c.total_cha) * 2, 0)))
+        cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():
@@ -247,13 +247,22 @@ class SpecialActionButton(discord.ui.Button):
                         )
                         self.view.exposed = True
                     elif roll >= 0.90:
-                        hp = session.monster_hp()
-                        msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
-                            challenge=session.challenge,
-                            attr=session.attribute,
-                            hp_symbol=self.view.cog.emojis.hp,
-                            hp=humanize_number(hp),
-                        )
+                        if self.view.rng.choice(["hp", "dipl"]) == "hp":
+                            hp = session.monster_hp()
+                            msg += _("This monster is **a{attr} {challenge}** ({hp_symbol} {hp}).\n").format(
+                                challenge=session.challenge,
+                                attr=session.attribute,
+                                hp_symbol=self.view.cog.emojis.hp,
+                                hp=humanize_number(hp),
+                            )
+                        else:
+                            dipl = session.monster_dipl()
+                            msg += _("This monster is **a{attr} {challenge}** ({dipl_symbol} {dipl}).\n").format(
+                                challenge=session.challenge,
+                                attr=session.attribute,
+                                dipl_symbol=self.view.cog.emojis.dipl,
+                                dipl=humanize_number(dipl),
+                            )
                         self.view.exposed = True
                     elif roll > 0.70:
                         msg += _("This monster is **a{attr} {challenge}**.\n").format(
@@ -266,64 +275,77 @@ class SpecialActionButton(discord.ui.Button):
                             challenge=session.challenge,
                         )
                         self.view.exposed = True
+
+                    revealed_stats = []
                     if roll >= 0.98:
+                        revealed_stats = ["physical", "magic", "diplomacy"]
+                    elif roll >= 0.95:
+                        revealed_stats = self.view.rng.sample(["physical", "magic", "diplomacy"], self.view.rng.choice([1, 2]))
+
+                    if "physical" in revealed_stats:
                         real_pdef = max(pdef, 0.5)
+                        msg += _("Blades will cut **{pdef}x as effectively** against this monster.\n").format(
+                            pdef=round(1 / real_pdef, 2),
+                        )
+                    elif roll >= physical_roll:
+                        if pdef >= 2.0:
+                            msg += _("Every sword is **impossible to penetrate** this monster's overwhelming armour!\n")
+                        elif pdef >= 1.75:
+                            msg += _("This monster's armour is **near-unbreakable**, even the sharpest sword barely scratches it!\n")
+                        elif pdef >= 1.5:
+                            msg += _("Swords bounce off this monster as its skin is **almost impenetrable!**\n")
+                        elif pdef >= 1.25:
+                            msg += _("This monster has **extremely tough** armour!\n")
+                        elif pdef > 1:
+                            msg += _("Swords don't cut this monster **quite as well!**\n")
+                        elif pdef > 0.75:
+                            msg += _("This monster is **soft and easy** to slice!\n")
+                        else:
+                            msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
+
+                    if "magic" in revealed_stats:
                         real_mdef = max(mdef, 0.5)
+                        msg += _("Spells will surge with **{mdef}x their usual power** against this monster.\n").format(
+                            mdef=round(1 / real_mdef, 2),
+                        )
+                    elif roll >= magic_roll:
+                        if mdef >= 2.0:
+                            msg += _("Don't even think of magic, as it has **zero effect** against this creature's overwhelming resistance!\n")
+                        elif mdef >= 1.75:
+                            msg += _("This monster's staggering magic resistance **nullifies most spells**!\n")
+                        elif mdef >= 1.5:
+                            msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
+                        elif mdef >= 1.25:
+                            msg += _("This monster has **substantial magic resistance!**\n")
+                        elif mdef > 1:
+                            msg += _("This monster has increased **magic resistance!**\n")
+                        elif mdef > 0.75:
+                            msg += _("This monster's hide **melts to magic!**\n")
+                        else:
+                            msg += _("Magic spells are **hugely effective** against this monster!\n")
+
+                    if "diplomacy" in revealed_stats:
                         real_cdef = max(cdef, 0.5)
                         msg += _(
-                            "Blades will cut **{pdef}x as effectively**, while spells will surge with **{mdef}x their usual power**.\n"
                             "Persuasive words will carry **{cdef}x their normal weight** against this monster.\n"
                         ).format(
-                            pdef=round(1 / real_pdef, 2),
-                            mdef=round(1 / real_mdef, 2),
                             cdef=round(1 / real_cdef, 2),
                         )
-                    else:
-                        if roll >= physical_roll:
-                            if pdef >= 2.0:
-                                msg += _("Every sword is **impossible to penetrate** this monster's overwhelming armour!\n")
-                            elif pdef >= 1.75:
-                                msg += _("This monster's armour is **near-unbreakable**, even the sharpest sword barely scratches it!\n")
-                            elif pdef >= 1.5:
-                                msg += _("Swords bounce off this monster as its skin is **almost impenetrable!**\n")
-                            elif pdef >= 1.25:
-                                msg += _("This monster has **extremely tough** armour!\n")
-                            elif pdef > 1:
-                                msg += _("Swords don't cut this monster **quite as well!**\n")
-                            elif pdef > 0.75:
-                                msg += _("This monster is **soft and easy** to slice!\n")
-                            else:
-                                msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
-                        if roll >= magic_roll:
-                            if mdef >= 2.0:
-                                msg += _("Don't even think of magic, as it has **zero effect** against this creature's overwhelming resistance!\n")
-                            elif mdef >= 1.75:
-                                msg += _("This monster's staggering magic resistance **nullifies most spells**!\n")
-                            elif mdef >= 1.5:
-                                msg += _("Magic? Pfft, magic is **no match** for this creature!\n")
-                            elif mdef >= 1.25:
-                                msg += _("This monster has **substantial magic resistance!**\n")
-                            elif mdef > 1:
-                                msg += _("This monster has increased **magic resistance!**\n")
-                            elif mdef > 0.75:
-                                msg += _("This monster's hide **melts to magic!**\n")
-                            else:
-                                msg += _("Magic spells are **hugely effective** against this monster!\n")
-                        if roll >= diplo_roll:
-                            if cdef >= 2.0:
-                                msg += _("This creature is **utterly deaf** to your puny diplomacy!\n")
-                            elif cdef >= 1.75:
-                                msg += _("Cool? Nah, this creature's **overwhelming defiance** makes diplomacy nearly hopeless!\n")
-                            elif cdef >= 1.5:
-                                msg += _("You think you are charismatic? Pfft, this creature **couldn't care less** for what you want to say!\n")
-                            elif cdef >= 1.25:
-                                msg += _("Any attempts to communicate with this creature will be **very difficult!**\n")
-                            elif cdef > 1:
-                                msg += _("Any attempts to talk to this creature will be **difficult!**\n")
-                            elif cdef > 0.75:
-                                msg += _("This creature **can be reasoned** with!\n")
-                            else:
-                                msg += _("This monster can be **easily influenced!**\n")
+                    elif roll >= diplo_roll:
+                        if cdef >= 2.0:
+                            msg += _("This creature is **utterly deaf** to your puny diplomacy!\n")
+                        elif cdef >= 1.75:
+                            msg += _("Cool? Nah, this creature's **overwhelming defiance** makes diplomacy nearly hopeless!\n")
+                        elif cdef >= 1.5:
+                            msg += _("You think you are charismatic? Pfft, this creature **couldn't care less** for what you want to say!\n")
+                        elif cdef >= 1.25:
+                            msg += _("Any attempts to communicate with this creature will be **very difficult!**\n")
+                        elif cdef > 1:
+                            msg += _("Any attempts to talk to this creature will be **difficult!**\n")
+                        elif cdef > 0.75:
+                            msg += _("This creature **can be reasoned** with!\n")
+                        else:
+                            msg += _("This monster can be **easily influenced!**\n")
 
                 if msg:
                     image = None
