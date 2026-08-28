@@ -503,7 +503,7 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["cooldown"] <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                    self.save_character_in_background(ctx.author, await c.to_json(ctx, self.config))
 
                     await smart_embed(
                         ctx,
@@ -570,9 +570,9 @@ class ClassAbilities(AdventureMixin):
                     await smart_embed(ctx, _(f"Another hero has already done a better job than you. {self.emojis.dice}({int(round(roll * max_roll))})"))
                 c.heroclass["ability"] = True
                 c.heroclass["cooldown"] = time.time() + cooldown_time
-                async with self.get_lock(c.user):
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
-                    textroll = random.randint(1, 6)
+
+                self.save_character_in_background(ctx.author, await c.to_json(ctx, self.config))
+                textroll = random.randint(1, 6)
                 if good:
                     if textroll == 1 or textroll == 4:
                         await smart_embed(
@@ -686,7 +686,7 @@ class ClassAbilities(AdventureMixin):
                             real_mdef = max(mdef, 0.5)
                             real_cdef = max(cdef, 0.5)
                             msg += _(
-                                "Using blades will cut **{pdef}x as effectively**, while spells will surge with **{mdef}x their usual power**.\n"
+                                "Blades will cut **{pdef}x as effectively**, while spells will surge with **{mdef}x their usual power**.\n"
                                 "Persuasive words will carry **{cdef}x their normal weight** against this monster.\n"
                             ).format(
                                 pdef=round(1 / real_pdef, 2),
@@ -792,7 +792,7 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["cooldown"] <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                    self.save_character_in_background(ctx.author, await c.to_json(ctx, self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} {c} is starting to froth at the mouth... {skill}").format(
@@ -842,7 +842,7 @@ class ClassAbilities(AdventureMixin):
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
 
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                    self.save_character_in_background(ctx.author, await c.to_json(ctx, self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} {c} is focusing all of their energy... {skill}").format(
@@ -890,7 +890,7 @@ class ClassAbilities(AdventureMixin):
                 if c.heroclass["cooldown"] <= time.time():
                     c.heroclass["ability"] = True
                     c.heroclass["cooldown"] = time.time() + cooldown_time
-                    await self.config.user(ctx.author).set(await c.to_json(ctx, self.config))
+                    self.save_character_in_background(ctx.author, await c.to_json(ctx, self.config))
                     await smart_embed(
                         ctx,
                         _("{skill} {c} is whipping up a performance... {skill}").format(

@@ -130,7 +130,7 @@ class SpecialActionButton(discord.ui.Button):
             if c.heroclass["cooldown"] <= time.time():
                 c.heroclass["ability"] = True
                 c.heroclass["cooldown"] = time.time() + cooldown_time
-                await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+                self.view.cog.save_character_in_background(user, await c.to_json(self.view.ctx, self.view.cog.config))
                 msg = _("{bless} **{c}** is starting an inspiring sermon. {bless}").format(
                     c=escape(user.display_name), bless=self.view.cog.emojis.skills.bless
                 )
@@ -164,7 +164,7 @@ class SpecialActionButton(discord.ui.Button):
             c.heroclass["ability"] = True
             c.heroclass["cooldown"] = time.time() + cooldown_time
 
-            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+            self.view.cog.save_character_in_background(user, await c.to_json(self.view.ctx, self.view.cog.config))
             textroll = self.view.rng.randint(1, 6)
             if good:
                 if textroll == 1 or textroll == 4:
@@ -271,7 +271,7 @@ class SpecialActionButton(discord.ui.Button):
                         real_mdef = max(mdef, 0.5)
                         real_cdef = max(cdef, 0.5)
                         msg += _(
-                            "Using blades will cut **{pdef}x as effectively**, while spells will surge with **{mdef}x their usual power**.\n"
+                            "Blades will cut **{pdef}x as effectively**, while spells will surge with **{mdef}x their usual power**.\n"
                             "Persuasive words will carry **{cdef}x their normal weight** against this monster.\n"
                         ).format(
                             pdef=round(1 / real_pdef, 2),
@@ -365,7 +365,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["cooldown"] <= time.time():
             c.heroclass["ability"] = True
             c.heroclass["cooldown"] = time.time() + cooldown_time
-            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+            self.view.cog.save_character_in_background(user, await c.to_json(self.view.ctx, self.view.cog.config))
             await smart_embed(
                 None,
                 _("{skill} **{c}** is starting to froth at the mouth... {skill}").format(
@@ -390,7 +390,7 @@ class SpecialActionButton(discord.ui.Button):
             c.heroclass["ability"] = True
             c.heroclass["cooldown"] = time.time() + cooldown_time
 
-            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+            self.view.cog.save_character_in_background(user, await c.to_json(self.view.ctx, self.view.cog.config))
             await smart_embed(
                 None,
                 _("{skill} **{c}** is focusing all of their energy... {skill}").format(
@@ -414,7 +414,7 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["cooldown"] <= time.time():
             c.heroclass["ability"] = True
             c.heroclass["cooldown"] = time.time() + cooldown_time
-            await self.view.cog.config.user(user).set(await c.to_json(self.view.ctx, self.view.cog.config))
+            self.view.cog.save_character_in_background(user, await c.to_json(self.view.ctx, self.view.cog.config))
             await smart_embed(
                 None,
                 _("{skill} **{c}** is whipping up a performance... {skill}").format(

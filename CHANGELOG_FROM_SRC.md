@@ -111,6 +111,13 @@ upstream. Listed oldest to newest.
 - The team bonus message now shows the roll that triggered it instead of an icon.
 - Tweak Insight messages.
 
-## `latest`
+## `0768a53` — insight word refresh
 
 - Insight's discovery message got a wording refresh.
+
+## `latest`
+
+- Speed up how quickly adventure rewards show up after a fight, by reading and saving each player's character data once instead of several times over.
+- Fixed a bug where bonus treasure chests earned by a high-rebirth player could accidentally get added to other party members' chests too, instead of just their own.
+- Bless, Insight, Rage, Focus, and Music now respond faster with character data saved in the background.
+- Apply fixes to `dev.py` and `negaverse.py` as an impact on adventure optimization

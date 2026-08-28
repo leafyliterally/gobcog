@@ -204,7 +204,13 @@ class AdventureMixin(ABC):
 
     @abstractmethod
     async def _add_rewards(
-        self, ctx: commands.Context, user: Union[discord.Member, discord.User], exp: int, cp: int, special: Treasure
+        self,
+        ctx: commands.Context,
+        user: Union[discord.Member, discord.User],
+        c: Character,
+        exp: int,
+        cp: int,
+        special: Treasure,
     ) -> Optional[str]:
         raise NotImplementedError()
 
