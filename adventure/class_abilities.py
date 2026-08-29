@@ -715,9 +715,10 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This monster is **soft and easy** to slice!\n")
                             else:
                                 msg += _("Swords slice through this monster like a **hot knife through butter!**\n")
+
                         if "magic" in revealed_stats:
                             real_mdef = max(mdef, 0.5)
-                            msg += _("Spells will surge with **{mdef}x their usual power** against this monster.\n").format(
+                            msg += _("Magic spells will surge with **{mdef}x their usual power**.\n").format(
                                 mdef=round(1 / real_mdef, 2),
                             )
                         elif roll >= magic_roll:
@@ -735,11 +736,10 @@ class ClassAbilities(AdventureMixin):
                                 msg += _("This monster's hide **melts to magic!**\n")
                             else:
                                 msg += _("Magic spells are **hugely effective** against this monster!\n")
+
                         if "diplomacy" in revealed_stats:
                             real_cdef = max(cdef, 0.5)
-                            msg += _(
-                                "Persuasive words will carry **{cdef}x their normal weight** against this monster.\n"
-                            ).format(
+                            msg += _("Persuasive words will carry **{cdef}x their normal weight** with this creature.\n").format(
                                 cdef=round(1 / real_cdef, 2),
                             )
                         elif roll >= diplo_roll:

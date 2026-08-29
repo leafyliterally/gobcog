@@ -2179,7 +2179,6 @@ class Adventure(
                 crit_str = ""
                 crit_bonus = 0
                 base_bonus = session.rng.randint(5, 10) + rebirths
-                base_str = f"{self.emojis.magic_crit}️ {humanize_number(base_bonus)}"
                 if roll_perc > 0.95:
                     msg += _("{} had a surge of energy.\n").format(bold(user.display_name))
                     critlist.append(user)
@@ -2187,7 +2186,7 @@ class Adventure(
                     crit_str = f"{self.emojis.crit}{humanize_number(crit_bonus)}"
                 if c.hc is HeroClasses.wizard and c.heroclass["ability"]:
                     base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
-                    base_str = f"{self.emojis.magic_crit}️{humanize_number(base_bonus)}"
+                base_str = f"{self.emojis.magic_crit}️{humanize_number(base_bonus)}"
                 magic += int((roll + base_bonus + crit_bonus + int_value) / mdef)
                 bonus = base_str + crit_str
                 report += (
@@ -2424,7 +2423,7 @@ class Adventure(
 
                 if c.hc is HeroClasses.bard and c.heroclass["ability"]:
                     base_bonus = (session.rng.randint(1, 10) + 5) * (rebirths // 2)
-                base_str = f"🎵{humanize_number(base_bonus)}"
+                base_str = f"🎵 {humanize_number(base_bonus)}"
                 diplomacy += int((roll + base_bonus + crit_bonus + dipl_value) / cdef)
                 bonus = base_str + crit_str
                 report += (
