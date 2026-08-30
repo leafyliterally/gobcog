@@ -86,6 +86,10 @@ class AdventureMixin(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def save_character_in_background(self, user: discord.User, data: dict) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
     def in_adventure(self, ctx: Optional[commands.Context] = None, user: Optional[discord.Member] = None) -> bool:
         raise NotImplementedError()
 

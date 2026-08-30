@@ -143,7 +143,8 @@ class SpecialActionButton(discord.ui.Button):
         if c.heroclass["ability"]:
             await self.send_in_use(interaction)
             return
-        cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+        min_cooldown_time = 300 if self.view.easy_mode else 240
+        cooldown_time = max(min_cooldown_time, (900 - max((c.luck + c.total_cha) * 2, 0)))
         if "cooldown" not in c.heroclass:
             c.heroclass["cooldown"] = cooldown_time + 1
         if c.heroclass["cooldown"] <= time.time():

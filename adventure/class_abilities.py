@@ -556,7 +556,8 @@ class ClassAbilities(AdventureMixin):
                     ctx,
                     _("{user}, ability already in use.").format(user=bold(ctx.author.display_name)),
                 )
-            cooldown_time = max(300, (900 - max((c.luck + c.total_cha) * 2, 0)))
+            min_cooldown_time = 300 if self._sessions[SESSION_ID].easy_mode else 240
+            cooldown_time = max(min_cooldown_time, (900 - max((c.luck + c.total_cha) * 2, 0)))
             if "cooldown" not in c.heroclass:
                 c.heroclass["cooldown"] = cooldown_time + 1
             if c.heroclass["cooldown"] <= time.time():
